@@ -365,7 +365,7 @@ const API_KEY = 'AIzaSyBBQncnc-j-F4QE-HFsO18nawjPnPyo5vA';
 const MAP_ID  = '986c697e2ebf204c782b2d6d';
 // ── Clé API Anthropic (console.anthropic.com) ──────────────────────────
 // Obtenez votre clé sur https://console.anthropic.com/settings/keys
-const ANTHROPIC_KEY = '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'; // ex: 'sk-ant-api03-...'
+const ANTHROPIC_KEY = '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'; // ex: 'sk-ant-api03-...'
 const COLORS  = ['#6B5BE2','#E5734B','#27AE78','#9B4BE5','#C9A800','#E5386B','#00ACC1','#D35400','#4B7BE5','#58A83E'];
 const DIRS    = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSO','SO','OSO','O','ONO','NO','NNO'];
 const DCLR    = {S:'#1565C0',SSE:'#1565C0',SE:'#0EA5E9',SSO:'#1565C0',SO:'#0EA5E9',N:'#B45309',NNE:'#B45309',NNO:'#B45309',E:'#9B2C6A',ENE:'#9B2C6A',ESE:'#9B2C6A',NE:'#9B2C6A',O:'#5B3FBE',ONO:'#5B3FBE',OSO:'#5B3FBE',NO:'#5B3FBE'};
@@ -469,12 +469,19 @@ async function _startWithLocation(lat, lng, label, region){
   document.getElementById('mSrc').textContent='…';
   if(show3D) closeStandalone3D();
 
-  // Fetch ground elevation for correct 3D altitude reference
-  try{
-    const er=await fetch('https://maps.googleapis.com/maps/api/elevation/json?locations='+lat+','+lng+'&key='+API_KEY);
-    const ed=await er.json();
-    if(ed.status==='OK') cBaseAlt=ed.results[0].elevation;
-  }catch(e){ cBaseAlt=0; }
+  // Fetch ground elevation using Maps JS ElevationService (no CORS issues)
+  await new Promise(resolve=>{
+    try{
+      if(!window.google?.maps?.ElevationService){resolve();return;}
+      new google.maps.ElevationService().getElevationForLocations(
+        {locations:[{lat,lng}]},
+        (results,status)=>{
+          if(status==='OK'&&results?.[0]) cBaseAlt=results[0].elevation;
+          resolve();
+        }
+      );
+    }catch(e){resolve();}
+  });
 
   loadMapsAPI(async()=>{
     initMap();
@@ -879,12 +886,16 @@ async function alignToTerrain(segId){
 
   toast('Interrogation Elevation API…');
   try{
-    const r=await fetch('https://maps.googleapis.com/maps/api/elevation/json?locations='+encodeURIComponent(locs)+'&key='+API_KEY);
-    const d=await r.json();
-    if(d.status!=='OK'){ toast('Elevation API indisponible ('+d.status+') — vérifiez la clé'); return; }
-
+    if(!window.google?.maps?.ElevationService) throw new Error('ElevationService non disponible');
+    const locations=pts.map(v=>({lat:v.lat,lng:v.lng}));
+    const {results,status}=await new Promise((res,rej)=>{
+      new google.maps.ElevationService().getElevationForLocations(
+        {locations},
+        (results,status)=>status==='OK'?res({results,status}):rej(new Error('Elevation: '+status))
+      );
+    });
     // Keep only the corner elevations (not the center sample)
-    const elevs=d.results.slice(0,fp.length).map(r=>r.elevation);
+    const elevs=results.slice(0,fp.length).map(r=>r.elevation);
     seg.terrainData=elevs;
     seg.baseElevation=Math.min(...elevs);
     seg.terrainEnabled=true;
