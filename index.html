@@ -543,7 +543,7 @@ function initMap(){
   document.addEventListener('keydown',onKey);
   updateMapUI();
   // Init WebGL overlay after map is fully ready
-  google.maps.event.addListenerOnce(mapInst, 'idle', initGLOverlay);
+  google.maps.event.addListenerOnce(mapInst, 'idle', ()=>{ /* map ready */ });
 }
 
 function onKey(e){
@@ -667,10 +667,81 @@ function overlayLidar(lidar){
 // ════════════════════════════════════════════
 let _drawSegDepth=0;
 function drawSeg(seg){
-  // Only block deep recursion (>2 levels), allow normal sequential calls
   if(_drawSegDepth>1) return;
   _drawSegDepth++;
-  try{ _drawSegImpl(seg); }finally{ _drawSegDepth--; }
+  try{
+    if(!seg.visible){
+      if(seg.overlay) seg.overlay.setMap(null);
+      if(seg.label) seg.label.setMap(null);
+      return;
+    }
+    const isSel = seg.id===selId;
+    const opts = {
+      fillColor: seg.color, strokeColor: seg.color,
+      fillOpacity: isSel?.55:.35, strokeWeight: isSel?3:2,
+      strokeOpacity: 1, zIndex: isSel?10:5,
+      clickable: true, editable: appMode==='designer' && (editMode || isSel),
+    };
+
+    // Build/update the visible overlay (polygon if available, else rectangle from bb)
+    if(seg.polygon){
+      seg.polygon.setOptions(opts);
+      if(!seg.polygon.getMap()) seg.polygon.setMap(mapInst);
+      seg.overlay = seg.polygon;
+    } else if(seg.bb){
+      const bounds = {
+        north:seg.bb.ne.latitude, south:seg.bb.sw.latitude,
+        east:seg.bb.ne.longitude, west:seg.bb.sw.longitude,
+      };
+      if(seg.overlay && seg.overlay.setBounds){
+        seg.overlay.setBounds(bounds); seg.overlay.setOptions(opts);
+      } else {
+        if(seg.overlay) seg.overlay.setMap(null);
+        const r = new google.maps.Rectangle({...opts, bounds, map:mapInst});
+        r.addListener('click', e=>{
+          if(azEdgeMode) applyEdgeAz(seg, e.latLng);
+          else clickSeg(seg.id);
+        });
+        r.addListener('mouseover', ()=>hov(seg.id,true));
+        r.addListener('mouseout', ()=>hov(seg.id,false));
+        seg.overlay = r;
+      }
+    }
+
+    // Compute center for label
+    let center = seg.center;
+    if(!center && seg.polygon){
+      const path = seg.polygon.getPath();
+      let lat=0, lng=0, n=path.getLength();
+      path.forEach(p=>{ lat+=p.lat(); lng+=p.lng(); });
+      center = {latitude:lat/n, longitude:lng/n};
+      seg.center = center;
+    } else if(!center && seg.bb){
+      center = {
+        latitude:(seg.bb.ne.latitude+seg.bb.sw.latitude)/2,
+        longitude:(seg.bb.ne.longitude+seg.bb.sw.longitude)/2,
+      };
+      seg.center = center;
+    }
+
+    // Create/update label (m² badge)
+    if(center){
+      const pos = {lat:center.latitude, lng:center.longitude};
+      const area = getArea(seg).toFixed(1);
+      const labelHtml = `<div style="background:${seg.color};color:#fff;font-weight:700;font-size:11px;padding:2px 6px;border-radius:10px;border:1.5px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4);white-space:nowrap">${seg.name} · ${area}m²</div>`;
+      if(seg.label){
+        seg.label.setPosition(pos);
+        if(seg.label.setLabel) seg.label.setLabel(seg.name+' '+area+'m²');
+      } else {
+        seg.label = new google.maps.Marker({
+          position:pos, map:mapInst,
+          label:{text:seg.name+' '+area+'m²', color:'#fff', fontSize:'10px', fontWeight:'700'},
+          icon:{path:'M -1,-1 1,-1 1,1 -1,1 z', fillColor:seg.color, fillOpacity:.95, strokeColor:'#fff', strokeWeight:1.5, scale:14},
+          clickable:false, zIndex:20,
+        });
+      }
+    }
+  }finally{ _drawSegDepth--; }
 }
 function redrawAll(){segs.forEach(s=>drawSeg(s));}
 function hov(id,on){
