@@ -176,22 +176,6 @@ tbody tr:last-child td{border-bottom:none}
 .btn-terrain.active{background:#2E7D32;color:#fff;border-color:#1B5E20}
 .terrain-info{background:#E8F5E9;border-radius:6px;padding:7px 9px;margin-bottom:8px;font-size:11px;color:#2E7D32;border:1px solid #A5D6A7}
 
-/* ── Popup clé API Anthropic ── */
-.ak-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;align-items:center;justify-content:center}
-.ak-modal.vis{display:flex}
-.ak-box{background:#fff;border-radius:14px;padding:1.8rem;max-width:480px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.3)}
-.ak-title{font-size:16px;font-weight:700;margin-bottom:.4rem;display:flex;align-items:center;gap:8px}
-.ak-sub{font-size:12px;color:var(--muted);margin-bottom:1.2rem;line-height:1.6}
-.ak-sub a{color:var(--blue)}
-.ak-input{width:100%;padding:9px 12px;border:2px solid var(--bdr);border-radius:8px;font-size:13px;font-family:monospace;outline:none;margin-bottom:.5rem;color:var(--text)}
-.ak-input:focus{border-color:#6B5BE2}
-.ak-row{display:flex;gap:8px;justify-content:flex-end;margin-top:.8rem}
-.ak-ok{background:#6B5BE2;color:#fff;border:none;border-radius:7px;padding:8px 20px;font-size:13px;font-weight:600;cursor:pointer}
-.ak-ok:hover{background:#5448C8}
-.ak-cancel{background:#fff;color:var(--t2);border:1px solid var(--bdr);border-radius:7px;padding:8px 16px;font-size:13px;cursor:pointer}
-.ak-warn{font-size:10px;color:var(--amber);background:var(--abg);border-radius:5px;padding:5px 8px;margin-bottom:.8rem;line-height:1.5}
-.ak-status{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:#EDE9FF;color:#6B5BE2;cursor:pointer}
-.ak-status.ok{background:#EAF3DE;color:var(--g)}
 .facade-card{background:var(--card);border-radius:10px;border:1px solid var(--bdr);overflow:hidden;margin-bottom:10px}
 .facade-header{background:#1A3A5C;color:#fff;padding:.75rem 1rem;display:flex;align-items:center;justify-content:space-between}
 .facade-title{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
@@ -268,7 +252,6 @@ tbody tr:last-child td{border-bottom:none}
         <span style="font-size:10px;color:var(--muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="maddr"></span>
         <button class="mbtn" id="btnAerial" onclick="toggleAerial()" title="Orthophoto officielle belge IGN 25cm — bien plus nette que Google Maps" style="font-weight:700">🇧🇪 Photo BE</button>
         <button class="mbtn" id="btnAI" onclick="analyserIA()" title="Analyse IA : Claude détecte automatiquement les pans, pentes et azimuts" style="background:#6B5BE2;color:#fff;border-color:#6B5BE2;font-weight:700">🤖 IA</button>
-        <span class="ak-status" id="akStatus" onclick="openAkModal()" title="Cliquer pour changer la clé">🔑 Clé ?</span>
         <div class="map-sep"></div>
         <button class="mbtn" onclick="openEarth()">🌍</button>
         <button class="mbtn" onclick="resetView()">⊙</button>
@@ -376,25 +359,6 @@ tbody tr:last-child td{border-bottom:none}
   <div class="note" id="noteEl"></div>
 </div>
 
-<!-- Popup clé API Anthropic -->
-<div class="ak-modal" id="akModal">
-  <div class="ak-box">
-    <div class="ak-title">🤖 Clé API Anthropic</div>
-    <div class="ak-sub">
-      Nécessaire pour l'analyse IA des toitures.<br>
-      Obtenez une clé sur <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a> (compte + billing requis).<br>
-      La clé est stockée <strong>uniquement dans cet onglet</strong> — jamais dans le fichier.
-    </div>
-    <div class="ak-warn">⚠️ Ne partagez jamais cette clé. Elle donne accès à votre compte Anthropic.</div>
-    <input class="ak-input" id="akInput" type="password" placeholder="sk-ant-api03-..." autocomplete="off" />
-    <div style="font-size:10px;color:var(--muted)">La clé disparaît quand vous fermez l'onglet.</div>
-    <div class="ak-row">
-      <button class="ak-cancel" onclick="closeAkModal()">Annuler</button>
-      <button class="ak-ok" onclick="confirmAkKey()">✓ Utiliser cette clé</button>
-    </div>
-  </div>
-</div>
-
 <div class="toast" id="toast"></div>
 
 <script>
@@ -403,12 +367,10 @@ tbody tr:last-child td{border-bottom:none}
 // ════════════════════════════════════════════
 const API_KEY = 'AIzaSyBBQncnc-j-F4QE-HFsO18nawjPnPyo5vA';
 const MAP_ID  = '986c697e2ebf204c782b2d6d';
+// Backend WeCover (FastAPI on Render) — proxy cadastre + Claude IA
+const BACKEND_URL = 'https://wecover-api.onrender.com';
 // ── Clé API Anthropic (console.anthropic.com) ──────────────────────────
 // Obtenez votre clé sur https://console.anthropic.com/settings/keys
-// Clé Anthropic saisie via popup (jamais stockée dans le code)
-const ANTHROPIC_KEY = '';
-function getAnthropicKey(){ return sessionStorage.getItem('wc_ak')||''; }
-function setAnthropicKey(k){ sessionStorage.setItem("wc_ak",k.trim()); }
 const COLORS  = ['#6B5BE2','#E5734B','#27AE78','#9B4BE5','#C9A800','#E5386B','#00ACC1','#D35400','#4B7BE5','#58A83E'];
 const DIRS    = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSO','SO','OSO','O','ONO','NO','NNO'];
 const DCLR    = {S:'#1565C0',SSE:'#1565C0',SE:'#0EA5E9',SSO:'#1565C0',SO:'#0EA5E9',N:'#B45309',NNE:'#B45309',NNO:'#B45309',E:'#9B2C6A',ENE:'#9B2C6A',ESE:'#9B2C6A',NE:'#9B2C6A',O:'#5B3FBE',ONO:'#5B3FBE',OSO:'#5B3FBE',NO:'#5B3FBE'};
@@ -632,23 +594,12 @@ function buildFromSolar(sol){
 // LIDAR
 // ════════════════════════════════════════════
 async function fetchLidar(lat,lng,region){
-  const delta=0.0008;
+  // Use WeCover backend proxy → OSM Overpass (couvre toute la Belgique, sans CORS)
   try{
-    if(region==='flanders'||region==='brussels'){
-      const r=await fetch(`https://geo.api.vlaanderen.be/GRB/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=GRBgis:Gbg&outputFormat=application/json&srsName=EPSG:4326&bbox=${lng-delta},${lat-delta},${lng+delta},${lat+delta},EPSG:4326`);
-      if(!r.ok) return null;
-      const d=await r.json();
-      if(d.features?.length>0) return{type:'grb',data:d};
-    }
-    if(region==='wallonia'){
-      // PICC = Plan de vue en Croix (Wallonie) - couche 3 = Constructions Principales (bâtiments)
-      // URL officielle (CADGISWeb)
-      const url=`https://geoservices.wallonie.be/arcgis/rest/services/TOPOGRAPHIE/PICC_VDIFF/MapServer/3/query?geometry=${lng-delta},${lat-delta},${lng+delta},${lat+delta}&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=*&f=geojson&outSR=4326`;
-      const r=await fetch(url);
-      if(!r.ok) return null;
-      const d=await r.json();
-      if(d.features?.length>0) return{type:'wallon-picc',data:d};
-    }
+    const r=await fetch(`${BACKEND_URL}/api/cadastre?lat=${lat}&lng=${lng}&region=${region||'auto'}`);
+    if(!r.ok) return null;
+    const j=await r.json();
+    if(j.data?.features?.length>0) return{type:j.type||'osm',data:j.data};
   }catch(e){console.log('Cadastre:',e.message);}
   return null;
 }
@@ -953,25 +904,17 @@ function _applyAerialLayer(){
 
 async function analyserIA(){
   if(!cLat||!cLng){toast('Chargez une adresse d\'abord');return;}
-  if(!ANTHROPIC_KEY || !ANTHROPIC_KEY.trim().startsWith('sk-ant-')){
-    // No hardcoded key — check sessionStorage
-  }
-  const ak = getAnthropicKey();
-  if(!ak || !ak.startsWith('sk-ant-')){
-    openAkModal(()=>analyserIA()); // open popup, retry after
-    return;
-  }
+
   const btn=document.getElementById('btnAI');
   const orig=btn.innerHTML;
   btn.innerHTML='<span class="spin"></span> IA…';btn.disabled=true;
 
   try{
-    // ── 1. Capture image ─────────────────────────────────────────────
+    // ── 1. Capture satellite image (best effort) ──────────────────────
     const zoom=Math.min(mapInst?.getZoom()||21,21);
     const W=640,H=640;
     let imgBase64=null;
 
-    // Try Maps Static API
     toast('🤖 Capture image satellite…');
     imgBase64=await new Promise(res=>{
       const img=new Image();img.crossOrigin='anonymous';
@@ -984,159 +927,39 @@ async function analyserIA(){
       };
       img.onerror=()=>res(null);
       img.src=`https://maps.googleapis.com/maps/api/staticmap?center=${cLat},${cLng}&zoom=${zoom}&size=${W}x${H}&maptype=satellite&key=${API_KEY}`;
-      setTimeout(()=>res(null),7000);
+      setTimeout(()=>res(null),8000);
     });
 
-    // Fallback: Belgian WMS (Géoportail Wallon)
-    if(!imgBase64&&(cRegion==='wallonia')){
-      toast('🤖 Essai orthophoto Wallon IGN…');
-      const latM=111320,lngM=111320*Math.cos(d2r(cLat));
-      const dlat=H/2/latM,dlng=W/2/lngM;
-      const wmsUrl=`https://geoservices.wallonie.be/arcgis/services/IMAGERIE/ORTHO_2021/MapServer/WMSServer`+
-        `?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&LAYERS=0&STYLES=&FORMAT=image%2Fjpeg`+
-        `&CRS=EPSG%3A4326&BBOX=${cLat-dlat},${cLng-dlng},${cLat+dlat},${cLng+dlng}&WIDTH=${W}&HEIGHT=${H}`;
-      imgBase64=await new Promise(res=>{
-        const img=new Image();img.crossOrigin='anonymous';
-        img.onload=()=>{try{const cv=document.createElement('canvas');cv.width=W;cv.height=H;cv.getContext('2d').drawImage(img,0,0);cv.getContext('2d').getImageData(0,0,1,1);res(cv.toDataURL('image/jpeg',.88).split(',')[1]);}catch(e){res(null);}};
-        img.onerror=()=>res(null);img.src=wmsUrl;setTimeout(()=>res(null),9000);
-      });
-    }
+    toast(imgBase64?'🤖 Envoi à Claude…':'🤖 Analyse GPS + Solar API…');
 
-    // ── 2. Build prompt ───────────────────────────────────────────────
-    toast(imgBase64?'🤖 Image capturée ✓ — envoi à Claude…':'🤖 CORS local bloqué — analyse GPS + Solar…');
+    // ── 2. Call WeCover backend (clé Anthropic côté serveur) ──────────
+    const payload={
+      lat:cLat, lng:cLng,
+      label:cLabel||'', region:cRegion||'wallonia',
+      image_base64:imgBase64,
+      solar_segments:segs.map(s=>({pitch:s.pitch,azimuth:s.azimuth,area:getArea(s)})),
+      building_footprint:cBuildingFootprint||null,
+      zoom, image_width:W, image_height:H,
+    };
 
-    const solarCtx=segs.length
-      ?'Solar API a détecté '+segs.length+' pan(s) : '+segs.map(s=>s.name+' pente='+s.pitch.toFixed(0)+'° az='+s.azimuth.toFixed(0)+'°').join(', ')
-      :'Pas de données Solar API pour cette adresse.';
-
-    let prompt,coordMode;
-    // ── Shared context ───────────────────────────────────────────────
-    // Solar API data as soft prior
-    const solarPrior = segs.length
-      ? `DONNÉES SOLAR API (indicatives, pentes/azimuts fiables, nombre approximatif) :
-${segs.map((s,i)=>`  Pan ${i+1}: pente=${s.pitch.toFixed(0)}°, azimut=${s.azimuth.toFixed(0)}°, surface=${getArea(s).toFixed(0)}m²`).join('\n')}`
-      : 'Pas de données Solar API.';
-
-    // Building footprint from cadastre (PICC Wallonie / GRB Flandre)
-    // This is the GROUND TRUTH for where the building is
-    const cadastreCtx = cBuildingFootprint
-      ? `PARCELLE CADASTRALE DU BÂTIMENT (source officielle PICC/GRB — emprise au sol exacte) :
-${cBuildingFootprint.length} sommets délimitant l'emprise du bâtiment principal.
-Coordonnées : ${cBuildingFootprint.slice(0,10).map(p=>`(${p.lat.toFixed(6)},${p.lng.toFixed(6)})`).join(', ')}${cBuildingFootprint.length>10?' ...':''}
-→ TOUS les pans de toiture DOIVENT être à l'intérieur de cette emprise. Ne dessine RIEN à l'extérieur.
-→ Le nombre de pans peut être autant que nécessaire pour couvrir cette emprise (toiture complexe = plus de pans).`
-      : 'Pas de données cadastrales — devine l\'emprise du bâtiment principal au centre de l\'image.';
-
-    // Scale reference: pixels per meter at this zoom/location
-    const pxPerM = (256 * Math.pow(2, zoom)) * Math.cos(d2r(cLat)) / 40075016;
-
-    if(imgBase64){
-      coordMode='pixels';
-      prompt=`Tu mesures une toiture belge depuis une image satellite pour un devis ITE.
-
-ADRESSE : ${cLabel||cLat+','+cLng}
-IMAGE : ${W}×${H}px, zoom ${zoom}, centre image = pixel (${W/2},${H/2})
-ÉCHELLE : 1 mètre = ${pxPerM.toFixed(1)} pixels
-
-${solarPrior}
-
-${cadastreCtx}
-
-MISSION : Identifie TOUS les pans de toiture du bâtiment principal, suivant l'emprise cadastrale.
-
-RÈGLES :
-1. **Emprise cadastrale** : si une parcelle PICC/GRB est fournie ci-dessus, dessine UNIQUEMENT à l'intérieur de cette emprise. La somme des pans = surface totale de l'emprise (toiture inclinée).
-2. **Pas de limite arbitraire** : si la toiture est complexe (décrochements, extensions, lucarnes importantes >10m²), tu peux dessiner autant de pans que nécessaire (typiquement 2 à 10).
-3. **Fusion intelligente** : fusionne les pans de même pente ET même azimut (tolérance ±10°) qui forment une surface continue.
-4. **Ignore** : annexes hors emprise, garages détachés, abris, maisons voisines, lucarnes < 5m².
-5. **Trace précis** : polygones sur les arêtes visibles (faîtage, gouttières, rives, noues, arêtiers).
-
-TYPOLOGIES BELGES :
-- Mitoyenne 2 façades : 2 pans (avant rue + arrière jardin)
-- 3 façades : 2 pans + croupe ou pignon
-- 4 façades simple : 2 ou 4 pans
-- Villa croupes : 4 pans (2 grands + 2 croupes triangulaires)
-- L-shape ou décrochement : 4-6+ pans
-- Toit plat + extension : 1 plat + 2-4 pans inclinés
-
-Pour chaque pan :
-- name : "Pan Sud", "Croupe Est", "Pan rue", "Extension arrière", etc.
-- polygon : 4-8 points [[x,y]] sur les arêtes visibles
-- pitch_deg : pente (utilise Solar API si correspondance)
-- azimuth_deg : direction du BAS du pan (0=N, 90=E, 180=S, 270=O)
-
-Globalement :
-- building_eave_height_m : gouttière basse (défaut 6m)
-- building_type : description concise
-- notes : observations utiles (mitoyennetés, lucarnes principales)
-
-JSON UNIQUEMENT, aucun autre texte :
-{"planes":[{"name":"Pan Sud","polygon":[[x1,y1],...],"pitch_deg":35,"azimuth_deg":180}],"building_eave_height_m":6.0,"building_type":"...","notes":""}`;
-
-    }else{
-      coordMode='meters';
-      prompt=`Tu reconstruis la géométrie d'une toiture belge pour un devis ITE.
-
-ADRESSE : ${cLabel||cLat+','+cLng}
-CENTRE GPS : ${cLat.toFixed(6)}, ${cLng.toFixed(6)}
-${solarPrior}
-
-RÈGLES ABSOLUES :
-1. Utilise l'emprise cadastrale (si fournie ci-dessus) comme limite — pans à l'intérieur uniquement
-2. Pentes/azimuts Solar API sont fiables, utilise-les
-3. Fusionne les pans de même azimut (±15°)
-4. Architecture belge typique : 2 pans pour maison mitoyenne, 4 pour villa à croupes, plus pour décrochements
-5. Le nombre de pans peut être autant que nécessaire pour couvrir l'emprise réelle du bâtiment
-
-Pour chaque pan :
-- name : "Pan Sud", "Pan Nord", etc.
-- offsets_m : 4 points [[est_m, nord_m]] en mètres depuis le centre GPS
-  Taille typique : profondeur 4-7m, largeur 8-15m selon le bâtiment
-- pitch_deg : valeur Solar API
-- azimuth_deg : valeur Solar API
-
-Globalement : building_eave_height_m (défaut 6), building_type, notes
-
-JSON UNIQUEMENT :
-{"planes":[{"name":"Pan Sud","offsets_m":[[-4,-3],[4,-3],[4,3],[-4,3]],"pitch_deg":35,"azimuth_deg":180}],"building_eave_height_m":6.0,"building_type":"2 pans pignon","notes":""}`;
-    }
-
-    // ── 3. Call Claude API ────────────────────────────────────────────
-    const msgContent=[];
-    if(imgBase64) msgContent.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:imgBase64}});
-    msgContent.push({type:'text',text:prompt});
-
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+    const resp=await fetch(`${BACKEND_URL}/api/analyze`,{
       method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'x-api-key':getAnthropicKey().trim(),
-        'anthropic-version':'2023-06-01',
-        'anthropic-dangerous-direct-browser-access':'true',
-      },
-      body:JSON.stringify({
-        model:'claude-sonnet-4-6',
-        max_tokens:2000,
-        messages:[{role:'user',content:msgContent}],
-      }),
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload),
     });
-
     if(!resp.ok){
       const errTxt=await resp.text();
-      throw new Error('API '+resp.status+': '+errTxt.slice(0,200));
+      throw new Error('Backend '+resp.status+': '+errTxt.slice(0,200));
     }
-    const data=await resp.json();
-    const txt=data.content?.[0]?.text||'';
-    const m=txt.match(/\{[\s\S]*\}/);
-    if(!m) throw new Error('Réponse IA non parseable. Réponse brute : '+txt.slice(0,100));
-    const result=JSON.parse(m[0]);
+    const result=await resp.json();
 
-    // ── 4. Create segments ────────────────────────────────────────────
+    // ── 3. Create segments from AI result ─────────────────────────────
+    const coordMode = result._coord_mode || (imgBase64 ? 'pixels' : 'meters');
     _applyAIResult(result,coordMode,zoom,W,H,!!imgBase64);
 
   }catch(e){
     console.error('IA error:',e);
-    toast('❌ Erreur IA : '+e.message.slice(0,100));
+    toast('❌ Erreur IA : '+e.message.slice(0,120));
   }finally{
     btn.innerHTML=orig;btn.disabled=false;
   }
@@ -2103,41 +1926,8 @@ function copyExport(){
 // ════════════════════════════════════════════
 // UI
 // ════════════════════════════════════════════
-// ── Popup clé Anthropic ──────────────────────────────────────────
-let _akCallback=null;
-function openAkModal(cb){
-  _akCallback=cb||null;
-  const inp=document.getElementById('akInput');
-  if(inp){inp.value=getAnthropicKey()||'';inp.type='password';}
-  document.getElementById('akModal').classList.add('vis');
-  setTimeout(()=>inp?.focus(),100);
-  _updateAkStatus();
-}
-function closeAkModal(){ document.getElementById('akModal').classList.remove('vis'); }
-function confirmAkKey(){
-  const val=document.getElementById('akInput').value.trim();
-  if(!val.startsWith('sk-ant-')){ toast('❌ Clé invalide — doit commencer par sk-ant-'); return; }
-  setAnthropicKey(val);
-  closeAkModal();
-  _updateAkStatus();
-  toast('✓ Clé Anthropic enregistrée pour cet onglet');
-  if(_akCallback){ setTimeout(_akCallback,300); _akCallback=null; }
-}
-function _updateAkStatus(){
-  const s=document.getElementById('akStatus'); if(!s)return;
-  const ok=getAnthropicKey().startsWith('sk-ant-');
-  s.textContent=ok?'🔑 Clé ✓':'🔑 Clé ?';
-  s.className='ak-status'+(ok?' ok':'');
-  s.title=ok?'Clé active — cliquer pour changer':'Cliquer pour saisir la clé Anthropic';
-}
 // Check key status on page load
-document.addEventListener('DOMContentLoaded',()=>{ setTimeout(_updateAkStatus,500); });
 // Enter key in modal input
-document.addEventListener('keydown',e=>{
-  if(e.key==='Enter'&&document.getElementById('akModal')?.classList.contains('vis')) confirmAkKey();
-  if(e.key==='Escape'&&document.getElementById('akModal')?.classList.contains('vis')) closeAkModal();
-});
-
 // ════════════════════════════════════════════
 // ÉCHAFAUDAGE — estimation ITE
 // ════════════════════════════════════════════
