@@ -216,7 +216,6 @@ tbody tr:last-child td{border-bottom:none}
 @media(max-width:680px){.split{grid-template-columns:1fr}.metrics{grid-template-columns:1fr 1fr}}
 </style>
 <!-- Three.js loaded eagerly so WebGLOverlayView can use it immediately -->
-<script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -271,9 +270,6 @@ tbody tr:last-child td{border-bottom:none}
         <button class="mbtn" id="btnAI" onclick="analyserIA()" title="Analyse IA : Claude détecte automatiquement les pans, pentes et azimuts" style="background:#6B5BE2;color:#fff;border-color:#6B5BE2;font-weight:700">🤖 IA</button>
         <span class="ak-status" id="akStatus" onclick="openAkModal()" title="Cliquer pour changer la clé">🔑 Clé ?</span>
         <div class="map-sep"></div>
-        <button class="mbtn" id="btn3dPrism" onclick="toggle3DPrisms()" title="Prismes 3D sur la carte (WebGL)">▲ Prismes 3D</button>
-        <button class="mbtn" id="btnTilt" onclick="toggleTilt()">↑ Tilt 3D</button>
-        <button class="mbtn" id="btn3dTab" onclick="toggleStandalone3D()">⬡ Vue 3D</button>
         <button class="mbtn" onclick="openEarth()">🌍</button>
         <button class="mbtn" onclick="resetView()">⊙</button>
       </div>
@@ -365,9 +361,18 @@ tbody tr:last-child td{border-bottom:none}
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
       Copier pour devis
     </button>
-    <button class="bpdf" onclick="window.print()">🖨 PDF</button>
+    <button class="bpdf" onclick="generatePDFReport()">📄 Rapport PDF</button>
+    <button class="bpdf" onclick="toggleScaffolding()">🏗 Échafaudage</button>
     <span id="copied" style="font-size:11px;color:var(--g);font-weight:500;display:none">✓ Copié</span>
   </div>
+
+  <!-- Échafaudage panel -->
+  <div id="scaffPanel" style="display:none;background:var(--card);border-radius:10px;border:1px solid var(--bdr);padding:1rem;margin-bottom:10px">
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px">🏗 Estimation Échafaudage ITE</div>
+    <div id="scaffContent"></div>
+    <div style="font-size:10px;color:var(--muted);margin-top:6px">Estimation indicative · base = périmètre × hauteur gouttière · +15% joints/angles</div>
+  </div>
+
   <div class="note" id="noteEl"></div>
 </div>
 
@@ -414,11 +419,12 @@ const EAVE_H  = 6;   // metres altitude at eave (approximate)
 // STATE
 // ════════════════════════════════════════════
 let segs=[], selId=null, appMode='analyse', detId=null, desView='pans'; // desView: 'pans'|'detail'
-let mapInst=null, drawMgr=null, editMode=false, isTilt=false, hdg=0, azEdgeMode=false;
+let mapInst=null, drawMgr=null, editMode=false, azEdgeMode=false;
 let cLat=0, cLng=0, cLabel='', cRegion='unknown', cBaseAlt=0;
-let solarRects=[], lidarPolys=[], colorIdx=0;
+let cBuildingFootprint=null;  // closest building polygon from PICC/GRB — used as AI constraint
+let lidarPolys=[];  // visual cadastre overlays
+let solarRects=[], colorIdx=0;
 // WebGL overlay (3D prisms on map)
-let glOverlay=null, glRend=null, glScene=null, glCam=null, glMeshes=[], glReady=false, showPrisms=false;
 // Standalone Three.js
 let tScene=null, tCam=null, tRend=null, tCtrl=null, tMeshes=[], tAF=null, show3D=false;
 
@@ -501,7 +507,7 @@ async function doSearch(){
 
 async function _startWithLocation(lat, lng, label, region){
   cLat=lat; cLng=lng; cLabel=label; cRegion=region; cBaseAlt=0;
-  colorIdx=0; isTilt=false; hdg=0; azEdgeMode=false;
+  colorIdx=0; azEdgeMode=false;
   document.getElementById('maddr').textContent=label;
   document.getElementById('res').style.display='block';
   document.getElementById('mSrc').textContent='…';
@@ -551,9 +557,9 @@ function initMap(){
   solarRects.forEach(r=>r.setMap(null));
   lidarPolys.forEach(p=>p.setMap(null));
   segs=[]; solarRects=[]; lidarPolys=[]; selId=null; detId=null; editMode=false; azEdgeMode=false;
-  showPrisms=false;
+  
   document.getElementById('prismBadge').classList.remove('vis');
-  document.getElementById('btn3dPrism').classList.remove('prism-on');
+  
 
   // mapId enables vector rendering for WebGLOverlayView
   mapInst = new google.maps.Map(document.getElementById('mapEl'),{
@@ -635,89 +641,85 @@ async function fetchLidar(lat,lng,region){
       if(d.features?.length>0) return{type:'grb',data:d};
     }
     if(region==='wallonia'){
-      const r=await fetch(`https://geoservices.wallonie.be/arcgis/rest/services/URBANISME_AMENAGEMENT/PARC_CADASTRAL_NUMERIQUE/MapServer/0/query?geometry=${lng-delta},${lat-delta},${lng+delta},${lat+delta}&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=*&f=geojson&outSR=4326`);
+      // PICC = Plan de vue en Croix (Wallonie) - couche 3 = Constructions Principales (bâtiments)
+      // URL officielle (CADGISWeb)
+      const url=`https://geoservices.wallonie.be/arcgis/rest/services/TOPOGRAPHIE/PICC_VDIFF/MapServer/3/query?geometry=${lng-delta},${lat-delta},${lng+delta},${lat+delta}&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=*&f=geojson&outSR=4326`;
+      const r=await fetch(url);
       if(!r.ok) return null;
       const d=await r.json();
-      if(d.features?.length>0) return{type:'wallon',data:d};
+      if(d.features?.length>0) return{type:'wallon-picc',data:d};
     }
-  }catch(e){console.log('LiDAR:',e.message);}
+  }catch(e){console.log('Cadastre:',e.message);}
   return null;
+}
+
+// Identify the closest building polygon to the address (used as AI constraint)
+function findClosestBuilding(lidar){
+  if(!lidar?.data?.features?.length) return null;
+  let best=null, bestD=Infinity;
+  const latM=111320, lngM=111320*Math.cos(d2r(cLat));
+  lidar.data.features.forEach(f=>{
+    if(!f.geometry) return;
+    const rings = f.geometry.type==='Polygon'?[f.geometry.coordinates[0]]:f.geometry.coordinates.map(c=>c[0]);
+    rings.forEach(ring=>{
+      if(!ring||ring.length<3) return;
+      const cx=ring.reduce((s,p)=>s+p[0],0)/ring.length;
+      const cy=ring.reduce((s,p)=>s+p[1],0)/ring.length;
+      const dx=(cx-cLng)*lngM, dy=(cy-cLat)*latM;
+      const d=Math.sqrt(dx*dx+dy*dy);
+      if(d<bestD){ bestD=d; best=ring.map(p=>({lat:p[1],lng:p[0]})); }
+    });
+  });
+  // Only return if building is within 80m of address
+  return bestD<80 ? best : null;
 }
 
 function overlayLidar(lidar){
   if(!mapInst||!lidar?.data?.features?.length) return;
+
+  // Find closest building → use as AI constraint and highlight visually
+  cBuildingFootprint = findClosestBuilding(lidar);
+
   lidar.data.features.forEach(f=>{
     if(!f.geometry) return;
     const rings = f.geometry.type==='Polygon'?f.geometry.coordinates:[f.geometry.coordinates[0]];
     rings.forEach(ring=>{
       if(!ring||ring.length<3) return;
+      // Check if this ring is the "closest building" → highlight differently
+      const isMain = cBuildingFootprint &&
+        Math.abs(ring[0][0]-cBuildingFootprint[0].lng)<1e-6 &&
+        Math.abs(ring[0][1]-cBuildingFootprint[0].lat)<1e-6;
       const poly=new google.maps.Polygon({
         paths:ring.map(c=>({lat:c[1],lng:c[0]})),
-        fillColor:'#00BFFF',fillOpacity:.07,strokeColor:'#00BFFF',
-        strokeWeight:1.2,strokeOpacity:.5,map:mapInst,clickable:false,zIndex:2,
+        fillColor: isMain?'#FF6B35':'#00BFFF',
+        fillOpacity: isMain?.12:.05,
+        strokeColor: isMain?'#FF6B35':'#00BFFF',
+        strokeWeight: isMain?2.5:1.2,
+        strokeOpacity: isMain?.85:.4,
+        map:mapInst, clickable:false, zIndex: isMain?5:2,
       });
       lidarPolys.push(poly);
     });
   });
   const badge=document.getElementById('lidarBadge');
-  badge.textContent=lidar.type==='grb'?'GRB Flandre':'Géoportail Wallon';
+  const lbl = lidar.type==='grb' ? 'GRB Flandre' : (lidar.type==='wallon-picc' ? 'PICC Wallonie · bât. principal' : 'Cadastre');
+  badge.textContent=lbl;
   badge.classList.add('vis');
-  document.getElementById('mSrc').textContent+='+LiDAR';
+  document.getElementById('mSrc').textContent+=' + Bâti';
+  if(cBuildingFootprint){
+    console.log('Building footprint detected:', cBuildingFootprint.length, 'vertices');
+  }
 }
 
 // ════════════════════════════════════════════
 // MAP OVERLAYS (2D rectangles/polygons)
 // ════════════════════════════════════════════
+let _drawSegDepth=0;
 function drawSeg(seg){
-  if(seg.label){seg.label.setMap(null);seg.label=null;}
-  const isSel=seg.id===selId, col=seg.color;
-  if(!seg.visible){if(seg.overlay)seg.overlay.setMap(null);return;}
-
-  if(seg.source==='api'&&seg.bb&&!seg.polygon){
-    if(!seg.overlay){
-      seg.overlay=new google.maps.Rectangle({
-        bounds:{north:seg.bb.ne.latitude,south:seg.bb.sw.latitude,east:seg.bb.ne.longitude,west:seg.bb.sw.longitude},
-        fillColor:col,fillOpacity:isSel?.45:.15,strokeColor:isSel?'#A8E060':col,
-        strokeWeight:isSel?3.5:2,strokeOpacity:.9,map:mapInst,clickable:true,zIndex:isSel?12:6,
-      });
-      seg.overlay.addListener('click',e=>{
-        if(azEdgeMode && selId===seg.id) applyEdgeAz(seg, e.latLng);
-        else clickSeg(seg.id);
-      });
-      seg.overlay.addListener('mouseover',()=>hov(seg.id,true));
-      seg.overlay.addListener('mouseout',()=>hov(seg.id,false));
-    }else{
-      seg.overlay.setOptions({fillOpacity:isSel?.45:.15,strokeColor:isSel?'#A8E060':col,strokeWeight:isSel?3.5:2,zIndex:isSel?12:6});
-      seg.overlay.setMap(mapInst);
-    }
-    if(!seg.center&&seg.bb) seg.center={latitude:(seg.bb.ne.latitude+seg.bb.sw.latitude)/2,longitude:(seg.bb.ne.longitude+seg.bb.sw.longitude)/2};
-  }else if(seg.polygon){
-    seg.overlay=seg.polygon;
-    seg.polygon.setOptions({fillColor:col,fillOpacity:isSel?.45:.15,strokeColor:isSel?'#A8E060':col,strokeWeight:isSel?3.5:2,zIndex:isSel?12:6});
-    seg.polygon.setMap(mapInst);
-    const b=new google.maps.LatLngBounds();seg.polygon.getPath().forEach(p=>b.extend(p));
-    const c=b.getCenter();seg.center={latitude:c.lat(),longitude:c.lng()};
-  }
-
-  if(seg.center){
-    const area=getArea(seg);
-    const c=seg.color;
-    const svg=encodeURIComponent(
-      '<svg xmlns="http://www.w3.org/2000/svg" width="82" height="32">'+
-      '<rect width="82" height="32" rx="5" fill="'+c+'" opacity="'+(isSel?.94:.68)+'"/>'+
-      (isSel?'<rect x="0" y="0" width="82" height="32" rx="5" fill="none" stroke="#A8E060" stroke-width="2"/>':'')+
-      '<text x="41" y="12" text-anchor="middle" fill="white" font-size="8.5" font-weight="600" font-family="Arial">'+esc(seg.name)+'</text>'+
-      '<text x="41" y="25" text-anchor="middle" fill="white" font-size="11.5" font-weight="700" font-family="Arial">'+area.toFixed(1)+' m\u00B2</text>'+
-      '</svg>'
-    );
-    seg.label=new google.maps.Marker({
-      position:{lat:seg.center.latitude,lng:seg.center.longitude},
-      map:mapInst,
-      icon:{url:'data:image/svg+xml;charset=UTF-8,'+svg,anchor:new google.maps.Point(41,16),scaledSize:new google.maps.Size(82,32)},
-      clickable:true,zIndex:22,
-    });
-    seg.label.addListener('click',()=>clickSeg(seg.id));
-  }
+  // Only block deep recursion (>2 levels), allow normal sequential calls
+  if(_drawSegDepth>1) return;
+  _drawSegDepth++;
+  try{ _drawSegImpl(seg); }finally{ _drawSegDepth--; }
 }
 function redrawAll(){segs.forEach(s=>drawSeg(s));}
 function hov(id,on){
@@ -734,7 +736,6 @@ function clickSeg(id){
   document.getElementById('dtDel').style.display=id?'inline-flex':'none';
   document.getElementById('dtAz').style.display=id?'inline-flex':'none';
   document.getElementById('dtSnap').style.display=(id&&appMode==='designer')?'inline-flex':'none';
-  if(showPrisms) buildGLMeshes();
   if(show3D) buildTMeshes();
 }
 
@@ -777,55 +778,6 @@ function makePrismGeom(cx, cz, w, d, pitchRad, azRad, eaveAlt){
 // ════════════════════════════════════════════
 // WEBGL OVERLAY (3D prisms on satellite map)
 // ════════════════════════════════════════════
-function initGLOverlay(){
-  if(!mapInst || !window.google?.maps?.WebGLOverlayView) {
-    console.log('WebGLOverlayView not available');
-    return;
-  }
-  if(!window.THREE) {
-    console.log('Three.js not loaded yet, retrying in 1s…');
-    setTimeout(initGLOverlay, 1000);
-    return;
-  }
-  if(glOverlay) { try{glOverlay.setMap(null);}catch(e){} }
-
-  glOverlay = new google.maps.WebGLOverlayView();
-
-  glOverlay.onAdd = ()=>{};
-  glOverlay.onRemove = ()=>{glReady=false;};
-
-  glOverlay.onContextRestored = ({gl})=>{
-    if(!window.THREE) { console.log('THREE still not loaded'); return; }
-    try{
-      glRend = new THREE.WebGLRenderer({canvas:gl.canvas, context:gl});
-      glRend.autoClear = false;
-      glCam = new THREE.Camera();
-      glScene = new THREE.Scene();
-      glScene.add(new THREE.AmbientLight(0xffffff, 0.7));
-      const sun = new THREE.DirectionalLight(0xffd580, 1.1);
-      sun.position.set(1.5, 3, 1); glScene.add(sun);
-      const fill = new THREE.DirectionalLight(0x80a0ff, 0.25);
-      fill.position.set(-1, 2, -1); glScene.add(fill);
-      glReady = true;
-      console.log('WebGL overlay ready ✓');
-      buildGLMeshes();
-    }catch(e){ console.log('GL init error:',e.message); }
-  };
-
-  glOverlay.onDraw = ({gl, transformer})=>{
-    if(!showPrisms || !glReady || !glScene) return;
-    try{
-      const M = transformer.fromLatLngAltitude({lat:cLat, lng:cLng, altitude:cBaseAlt});
-      glCam.projectionMatrix = new THREE.Matrix4().fromArray(M);
-      glRend.resetState();
-      glRend.render(glScene, glCam);
-    }catch(e){}
-    glOverlay.requestRedraw();
-  };
-
-  glOverlay.setMap(mapInst);
-}
-
 // Shared helper: get actual lat/lng vertices of a segment's map shape
 function getFootprint(seg){
   if(seg.polygon && seg.polygon.getPath){
@@ -846,69 +798,6 @@ function getFootprint(seg){
 }
 
 // ── Debounced GL rebuild for smooth real-time slider updates ──
-let _glT=null;
-function scheduleGL(){ clearTimeout(_glT); _glT=setTimeout(()=>{if(showPrisms)buildGLMeshes();},25); }
-
-function buildGLMeshes(){
-  if(!glScene || !glReady) return;
-  glMeshes.forEach(m=>glScene.remove(m)); glMeshes=[];
-
-  const latM=111320, lngM=111320*Math.cos(d2r(cLat));
-
-  segs.forEach(seg=>{
-    if(!seg.visible) return;
-    const fp=getFootprint(seg);
-    if(fp.length<3) return;
-
-    const pts=fp.map(v=>({x:(v.lng-cLng)*lngM, z:-(v.lat-cLat)*latM}));
-    const n=pts.length;
-
-    const pitchRad=d2r(seg.pitch), azRad=d2r(seg.azimuth);
-    const dax=Math.sin(azRad), daz=-Math.cos(azRad);
-    const cxp=pts.reduce((s,p)=>s+p.x,0)/n, czp=pts.reduce((s,p)=>s+p.z,0)/n;
-    const projs=pts.map(p=>-dax*(p.x-cxp)-daz*(p.z-czp));
-    const minP=Math.min(...projs), maxP=Math.max(...projs);
-    const range=Math.max(maxP-minP,0.5);
-    const eaveH=seg.eaveH||6;
-
-    // Terrain offset per vertex (Google Elevation API data)
-    const tOff=(seg.terrainEnabled&&seg.terrainData&&seg.terrainData.length===n)
-      ? seg.terrainData.map(e=>e-(seg.baseElevation||0))
-      : new Array(n).fill(0);
-
-    // Google Maps WebGL ENU system: X=East, Y=North, Z=Up (altitude)
-    // p.x = East metres, p.z = South metres → North = -p.z
-    const bottomY=tOff.map(o=>o);
-    const topY=pts.map((_,i)=>eaveH+tOff[i]+(projs[i]-minP)/range*range*Math.tan(pitchRad));
-
-    const pos=[];
-    pts.forEach((p,i)=>pos.push(p.x, -p.z, bottomY[i]));  // (east, north, altitude)
-    pts.forEach((p,i)=>pos.push(p.x, -p.z, topY[i]));
-
-    const idx=[];
-    for(let i=1;i<n-1;i++) idx.push(n,n+i+1,n+i);  // top (reversed winding for Z-up)
-    for(let i=1;i<n-1;i++) idx.push(0,i,i+1);        // bottom
-    for(let i=0;i<n;i++){const j=(i+1)%n; idx.push(i,n+i,j, j,n+i,n+j);} // walls
-
-    const geo=new THREE.BufferGeometry();
-    geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
-    geo.setIndex(idx); geo.computeVertexNormals();
-
-    const isSel=seg.id===selId;
-    const col=new THREE.Color(seg.color);
-    const mesh=new THREE.Mesh(geo,new THREE.MeshLambertMaterial({
-      color:col, opacity:isSel?.75:.55, transparent:true, side:THREE.DoubleSide,
-    }));
-    mesh.userData={segId:seg.id};
-    glScene.add(mesh); glMeshes.push(mesh);
-
-    const line=new THREE.LineSegments(new THREE.EdgesGeometry(geo),
-      new THREE.LineBasicMaterial({color:isSel?0x86CF3D:col,opacity:isSel?1:.55,transparent:true}));
-    glScene.add(line); glMeshes.push(line);
-  });
-  if(glOverlay) glOverlay.requestRedraw();
-}
-
 // ════════════════════════════════════════════
 // TERRAIN ALIGNMENT (Google Elevation API)
 // ════════════════════════════════════════════
@@ -941,7 +830,6 @@ async function alignToTerrain(segId){
     // Show min/max terrain for info
     const maxE=Math.max(...elevs);
     toast('Terrain aligné ✓ — relief '+( maxE-seg.baseElevation ).toFixed(1)+' m sur ce pan');
-    buildGLMeshes();
     if(show3D) buildTMeshes();
     renderRightPanel();
   }catch(e){ toast('Erreur Elevation API : '+e.message); }
@@ -949,214 +837,12 @@ async function alignToTerrain(segId){
 
 function resetTerrain(segId){
   const seg=segs.find(s=>s.id===segId); if(!seg)return;
-  seg.terrainData=null; seg.terrainEnabled=false; seg.baseElevation=null;
-  buildGLMeshes(); if(show3D) buildTMeshes();
+  seg.terrainData=null; seg.terrainEnabled=false; seg.baseElevation=null; if(show3D) buildTMeshes();
   renderRightPanel();
   toast('Terrain réinitialisé');
 }
 
-function toggle3DPrisms(){
-  if(!glOverlay){
-    toast('WebGL overlay en initialisation, réessayez dans 2 secondes…');
-    // Try to re-init
-    if(mapInst) initGLOverlay();
-    return;
-  }
-  if(!glReady){
-    toast('WebGL overlay en cours de chargement…');
-    return;
-  }
-  showPrisms = !showPrisms;
-  const btn = document.getElementById('btn3dPrism');
-  const badge = document.getElementById('prismBadge');
-  btn.classList.toggle('prism-on', showPrisms);
-  btn.textContent = showPrisms ? '▼ Prismes 3D' : '▲ Prismes 3D';
-  badge.classList.toggle('vis', showPrisms);
-  if(showPrisms){
-    buildGLMeshes();
-  } else {
-    if(glScene){ glMeshes.forEach(m=>glScene.remove(m)); glMeshes=[]; }
-    if(glOverlay) glOverlay.requestRedraw();
-  }
-}
-
-// ════════════════════════════════════════════
-// STANDALONE THREE.JS VIEW
-// ════════════════════════════════════════════
-function loadThreeJS(cb){
-  // THREE is pre-loaded via script tag in head
-  if(window.THREE){cb();return;}
-  // Fallback if somehow not loaded
-  const s=document.createElement('script');
-  s.src='https://unpkg.com/three@0.128.0/build/three.min.js';
-  s.onload=cb;document.head.appendChild(s);
-}
-
-function toggleStandalone3D(){
-  // "Vue 3D" = WebGL prisms on the satellite map (tilt + prismes like Helioscope)
-  const entering3D = !isTilt || !showPrisms;
-  if(entering3D){
-    if(!isTilt) toggleTilt();
-    if(!showPrisms){
-      if(glReady) toggle3DPrisms();
-      else{ toast('WebGL en initialisation…'); if(mapInst) initGLOverlay(); }
-    }
-  } else {
-    // Already in 3D: exit
-    if(showPrisms) toggle3DPrisms();
-    if(isTilt) toggleTilt();
-  }
-  document.getElementById('btn3dTab').classList.toggle('on', entering3D);
-  document.getElementById('view3d').style.display = 'none'; // hide legacy canvas
-}
-
-function initThree(){
-  if(tRend) return;
-  const canvas = document.getElementById('threeCanvas');
-  const mapEl=document.getElementById("mapEl"); const W=mapEl.offsetWidth||700, H=mapEl.offsetHeight||360;
-  tScene = new THREE.Scene();
-  tScene.background = null; // transparent — map shows through
-  tScene.fog = null; // no fog needed over satellite
-  tCam = new THREE.PerspectiveCamera(50, W/H, .1, 500);
-  tCam.position.set(0, 10, 13); tCam.lookAt(0, 3, 0);
-  tRend = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
-  tRend.setPixelRatio(Math.min(window.devicePixelRatio,2));
-  tRend.setClearColor(0x000000, 0); // fully transparent clear
-  tRend.setSize(W, H);
-  tRend.shadowMap.enabled=true; tRend.shadowMap.type=THREE.PCFSoftShadowMap;
-  tScene.add(new THREE.AmbientLight(0xffffff, .45));
-  const sun=new THREE.DirectionalLight(0xffd580, 1.1); sun.position.set(8,14,6); sun.castShadow=true; tScene.add(sun);
-  const fill=new THREE.DirectionalLight(0x8090ff, .2); fill.position.set(-6,4,-8); tScene.add(fill);
-  // No ground plane or grid — satellite imagery is the ground
-
-
-  tCtrl = new THREE.OrbitControls(tCam, canvas);
-  tCtrl.enableDamping=true; tCtrl.dampingFactor=.06; tCtrl.minDistance=2; tCtrl.maxDistance=60; tCtrl.maxPolarAngle=Math.PI/2-.02;
-  canvas.addEventListener('click', onThreeClick);
-  window.addEventListener('resize', onThreeResize);
-}
-
-function buildTMeshes(){
-  if(!tScene) return;
-  tMeshes.forEach(m=>tScene.remove(m)); tMeshes=[];
-  if(!segs.length) return;
-
-  const latM=111320, lngM=111320*Math.cos(d2r(cLat));
-  // Find bounding box for camera fit
-  let minLat=Infinity,maxLat=-Infinity,minLng=Infinity,maxLng=-Infinity;
-  segs.forEach(s=>{
-    const fp=getFootprint(s);
-    fp.forEach(v=>{
-      minLat=Math.min(minLat,v.lat);maxLat=Math.max(maxLat,v.lat);
-      minLng=Math.min(minLng,v.lng);maxLng=Math.max(maxLng,v.lng);
-    });
-  });
-  if(minLat===Infinity){minLat=cLat-.0005;maxLat=cLat+.0005;minLng=cLng-.0005;maxLng=cLng+.0005;}
-  const clat=(minLat+maxLat)/2, clng=(minLng+maxLng)/2;
-  const ext=Math.max((maxLat-minLat)*latM,(maxLng-minLng)*lngM,3);
-  const sc=14/ext;
-
-  segs.forEach(seg=>{
-    if(!seg.visible) return;
-    const isSel=seg.id===selId;
-    const fp=getFootprint(seg);
-    if(fp.length<3) return;
-
-    const pts=fp.map(v=>({x:(v.lng-clng)*lngM*sc, z:-(v.lat-clat)*latM*sc}));
-    const n=pts.length;
-    const pitchRad=d2r(seg.pitch), azRad=d2r(seg.azimuth);
-    const dax=Math.sin(azRad), daz=-Math.cos(azRad);
-    const cxp=pts.reduce((s,p)=>s+p.x,0)/n, czp=pts.reduce((s,p)=>s+p.z,0)/n;
-    const projs=pts.map(p=>-dax*(p.x-cxp)-daz*(p.z-czp));
-    const minP=Math.min(...projs), maxP=Math.max(...projs), range=Math.max(maxP-minP,.5);
-    const wallH=(seg.eaveH||6)*sc;
-    const topY=pts.map((_,i)=>wallH+(projs[i]-minP)/range*range*Math.tan(pitchRad));
-
-    const pos=[];
-    pts.forEach(p=>pos.push(p.x,0,p.z));
-    pts.forEach((p,i)=>pos.push(p.x,topY[i],p.z));
-    const idx=[];
-    for(let i=1;i<n-1;i++) idx.push(n,n+i,n+i+1);
-    for(let i=1;i<n-1;i++) idx.push(0,i+1,i);
-    for(let i=0;i<n;i++){const j=(i+1)%n; idx.push(i,j,n+i, n+i,j,n+j);}
-
-    const geo=new THREE.BufferGeometry();
-    geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
-    geo.setIndex(idx); geo.computeVertexNormals();
-
-    const col=new THREE.Color(seg.color);
-    const mesh=new THREE.Mesh(geo,new THREE.MeshLambertMaterial({color:col,opacity:isSel?.88:.58,transparent:true,side:THREE.DoubleSide}));
-    mesh.userData={segId:seg.id}; mesh.castShadow=true; tScene.add(mesh); tMeshes.push(mesh);
-    const eLine=new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:isSel?0x86CF3D:col,opacity:isSel?1:.6,transparent:true}));
-    tScene.add(eLine); tMeshes.push(eLine);
-    if(isSel){const gMesh=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color:0x86CF3D,opacity:.12,transparent:true,side:THREE.DoubleSide}));tScene.add(gMesh);tMeshes.push(gMesh);}
-
-    // Label
-    const sc2=document.createElement('canvas'); sc2.width=128; sc2.height=48;
-    const ctx=sc2.getContext('2d');
-    ctx.fillStyle=seg.color; ctx.beginPath();
-    if(ctx.roundRect) ctx.roundRect(2,2,124,44,6); else ctx.rect(2,2,124,44); ctx.fill();
-    ctx.fillStyle='#fff'; ctx.font='bold 12px Arial'; ctx.textAlign='center';
-    ctx.fillText(seg.name,64,19); ctx.font='bold 14px Arial';
-    ctx.fillText(getArea(seg).toFixed(1)+' m²',64,37);
-    const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(sc2),opacity:.9,transparent:true}));
-    const midY=wallH + Math.max(...topY.map((y,i)=>pts[i]?y:0))/2;
-    const cxs=pts.reduce((s,p)=>s+p.x,0)/n, czs=pts.reduce((s,p)=>s+p.z,0)/n;
-    spr.position.set(cxs, midY+.8, czs); spr.scale.set(2.8,1.1,.1);
-    tScene.add(spr); tMeshes.push(spr);
-  });
-
-    // Fit camera
-  const maxDim=Math.max(ext*sc,5);
-  if(tCam&&tCtrl){tCam.position.set(0,maxDim*.9,maxDim*.9);tCam.lookAt(0,WALL_H*sc/2,0);tCtrl.update();}
-}
-
-function animateThree(){
-  tAF=requestAnimationFrame(animateThree);
-  if(tCtrl)tCtrl.update();
-  if(tRend&&tScene&&tCam)tRend.render(tScene,tCam);
-}
-function resetThreeCam(){
-  if(!tCam||!tCtrl)return;
-  const ext=12;
-  tCam.position.set(0,ext*.9,ext*.9);tCam.lookAt(0,WALL_H*.5,0);tCtrl.reset();
-}
-function closeStandalone3D(){show3D=false;document.getElementById("view3d").style.display="none";document.getElementById("btn3dTab").classList.remove("on");if(tAF){cancelAnimationFrame(tAF);tAF=null;}}
-function onThreeClick(e){
-  if(!tCam||!tScene)return;
-  const canvas=document.getElementById('threeCanvas');
-  const rect=canvas.getBoundingClientRect();
-  const mouse=new THREE.Vector2(((e.clientX-rect.left)/rect.width)*2-1,-((e.clientY-rect.top)/rect.height)*2+1);
-  const ray=new THREE.Raycaster();ray.setFromCamera(mouse,tCam);
-  const hits=ray.intersectObjects(tMeshes.filter(m=>m.userData.segId));
-  if(hits.length>0){clickSeg(hits[0].object.userData.segId);buildTMeshes();}
-}
-function onThreeResize(){
-  if(!tRend||!tCam)return;
-  const canvas=document.getElementById('threeCanvas');
-  const mapEl=document.getElementById("mapEl"); const W=mapEl.offsetWidth,H=mapEl.offsetHeight;
-  if(W>0&&H>0){tCam.aspect=W/H;tCam.updateProjectionMatrix();tRend.setSize(W,H);}
-}
-
-// ════════════════════════════════════════════
-// MAP CONTROLS
-// ════════════════════════════════════════════
-function toggleTilt(){
-  if(!mapInst)return;
-  isTilt=!isTilt;
-  mapInst.setTilt(isTilt?67.5:0);
-  if(!isTilt){mapInst.setHeading(0);hdg=0;}
-  document.getElementById('btnTilt').classList.toggle('on',isTilt);
-  document.getElementById('btnTilt').textContent=isTilt?'↓ Normal':'↑ Tilt 3D';
-  document.getElementById('hdgbar').className='hdgbar'+(isTilt?' vis':'');
-  // Auto-enable/disable WebGL prisms with tilt
-  if(isTilt && !showPrisms && glReady) toggle3DPrisms();
-  else if(!isTilt && showPrisms) toggle3DPrisms();
-}
-function rotM(d){hdg=(hdg+d+360)%360;if(mapInst)mapInst.setHeading(hdg);}
-function setHdg(h){hdg=h;if(mapInst)mapInst.setHeading(h);}
-function openEarth(){window.open('https://earth.google.com/web/@'+cLat+','+cLng+',0a,120d,35y,'+hdg+'h,50t,0r','_blank');}
-function resetView(){if(!mapInst)return;mapInst.setCenter({lat:cLat,lng:cLng});mapInst.setZoom(21);mapInst.setHeading(0);hdg=0;if(isTilt)toggleTilt();}
+function resetView(){if(!mapInst)return;mapInst.setCenter({lat:cLat,lng:cLng});mapInst.setZoom(21);mapInst.setHeading(0);}
 
 // ════════════════════════════════════════════
 // ORTHOPHOTO BELGE — IGN/NGI 25cm
@@ -1324,55 +1010,95 @@ async function analyserIA(){
       :'Pas de données Solar API pour cette adresse.';
 
     let prompt,coordMode;
+    // ── Shared context ───────────────────────────────────────────────
+    // Solar API data as soft prior
+    const solarPrior = segs.length
+      ? `DONNÉES SOLAR API (indicatives, pentes/azimuts fiables, nombre approximatif) :
+${segs.map((s,i)=>`  Pan ${i+1}: pente=${s.pitch.toFixed(0)}°, azimut=${s.azimuth.toFixed(0)}°, surface=${getArea(s).toFixed(0)}m²`).join('\n')}`
+      : 'Pas de données Solar API.';
+
+    // Building footprint from cadastre (PICC Wallonie / GRB Flandre)
+    // This is the GROUND TRUTH for where the building is
+    const cadastreCtx = cBuildingFootprint
+      ? `PARCELLE CADASTRALE DU BÂTIMENT (source officielle PICC/GRB — emprise au sol exacte) :
+${cBuildingFootprint.length} sommets délimitant l'emprise du bâtiment principal.
+Coordonnées : ${cBuildingFootprint.slice(0,10).map(p=>`(${p.lat.toFixed(6)},${p.lng.toFixed(6)})`).join(', ')}${cBuildingFootprint.length>10?' ...':''}
+→ TOUS les pans de toiture DOIVENT être à l'intérieur de cette emprise. Ne dessine RIEN à l'extérieur.
+→ Le nombre de pans peut être autant que nécessaire pour couvrir cette emprise (toiture complexe = plus de pans).`
+      : 'Pas de données cadastrales — devine l\'emprise du bâtiment principal au centre de l\'image.';
+
+    // Scale reference: pixels per meter at this zoom/location
+    const pxPerM = (256 * Math.pow(2, zoom)) * Math.cos(d2r(cLat)) / 40075016;
+
     if(imgBase64){
-      // With image: ask for pixel coordinates
       coordMode='pixels';
-      prompt=`Tu es un expert en métré de toitures pour l\'isolation thermique (ITE) en Belgique.
+      prompt=`Tu mesures une toiture belge depuis une image satellite pour un devis ITE.
 
-Adresse : ${cLabel||cLat+','+cLng}
-Coordonnées GPS : ${cLat.toFixed(6)}, ${cLng.toFixed(6)}
-Image satellite : ${W}×${H}px · zoom ${zoom} · centre = pixel (${W/2}, ${H/2})
-Contexte : ${solarCtx}
+ADRESSE : ${cLabel||cLat+','+cLng}
+IMAGE : ${W}×${H}px, zoom ${zoom}, centre image = pixel (${W/2},${H/2})
+ÉCHELLE : 1 mètre = ${pxPerM.toFixed(1)} pixels
 
-MISSION : Identifie TOUS les pans de toiture du bâtiment principal (centre de l\'image).
+${solarPrior}
 
-Pour chaque pan, fournis :
-- name : "Pan Sud", "Pan Nord", "Croupe Est", "Extension Plate", etc.
-- polygon : tableau de 4 à 6 points [[x,y]] tracés précisément sur les arêtes visibles
-- pitch_deg : pente estimée en degrés (0=plat, 15=faible, 30=modéré, 45=pentu)
-- azimuth_deg : direction du BAS de pente (0=N, 90=E, 180=S, 270=O)
+${cadastreCtx}
 
-Plus :
-- building_eave_height_m : hauteur gouttière basse estimée (mètres)
-- building_type : "2 pans", "4 pans à croupes", "complexe", etc.
-- notes : lucarnes, chiens-assis, décrochements, mitoyenneté
+MISSION : Identifie TOUS les pans de toiture du bâtiment principal, suivant l'emprise cadastrale.
 
-RÉPONDS UNIQUEMENT EN JSON VALIDE :
-{"planes":[{"name":"...","polygon":[[x,y],...],"pitch_deg":35,"azimuth_deg":180}],"building_eave_height_m":6.0,"building_type":"...","notes":"..."}`;
+RÈGLES :
+1. **Emprise cadastrale** : si une parcelle PICC/GRB est fournie ci-dessus, dessine UNIQUEMENT à l'intérieur de cette emprise. La somme des pans = surface totale de l'emprise (toiture inclinée).
+2. **Pas de limite arbitraire** : si la toiture est complexe (décrochements, extensions, lucarnes importantes >10m²), tu peux dessiner autant de pans que nécessaire (typiquement 2 à 10).
+3. **Fusion intelligente** : fusionne les pans de même pente ET même azimut (tolérance ±10°) qui forment une surface continue.
+4. **Ignore** : annexes hors emprise, garages détachés, abris, maisons voisines, lucarnes < 5m².
+5. **Trace précis** : polygones sur les arêtes visibles (faîtage, gouttières, rives, noues, arêtiers).
+
+TYPOLOGIES BELGES :
+- Mitoyenne 2 façades : 2 pans (avant rue + arrière jardin)
+- 3 façades : 2 pans + croupe ou pignon
+- 4 façades simple : 2 ou 4 pans
+- Villa croupes : 4 pans (2 grands + 2 croupes triangulaires)
+- L-shape ou décrochement : 4-6+ pans
+- Toit plat + extension : 1 plat + 2-4 pans inclinés
+
+Pour chaque pan :
+- name : "Pan Sud", "Croupe Est", "Pan rue", "Extension arrière", etc.
+- polygon : 4-8 points [[x,y]] sur les arêtes visibles
+- pitch_deg : pente (utilise Solar API si correspondance)
+- azimuth_deg : direction du BAS du pan (0=N, 90=E, 180=S, 270=O)
+
+Globalement :
+- building_eave_height_m : gouttière basse (défaut 6m)
+- building_type : description concise
+- notes : observations utiles (mitoyennetés, lucarnes principales)
+
+JSON UNIQUEMENT, aucun autre texte :
+{"planes":[{"name":"Pan Sud","polygon":[[x1,y1],...],"pitch_deg":35,"azimuth_deg":180}],"building_eave_height_m":6.0,"building_type":"...","notes":""}`;
+
     }else{
-      // No image: ask for meter offsets from center
       coordMode='meters';
-      prompt=`Tu es un expert en métré de toitures pour l\'isolation thermique (ITE) en Belgique.
+      prompt=`Tu reconstruis la géométrie d'une toiture belge pour un devis ITE.
 
-Adresse : ${cLabel||cLat+','+cLng}
-Coordonnées GPS : ${cLat.toFixed(6)}, ${cLng.toFixed(6)}
-Contexte : ${solarCtx}
-Note : pas d\'image disponible (fichier local). Utilise les données Solar API et tes connaissances de l\'architecture belge typique.
+ADRESSE : ${cLabel||cLat+','+cLng}
+CENTRE GPS : ${cLat.toFixed(6)}, ${cLng.toFixed(6)}
+${solarPrior}
 
-MISSION : Reconstruis la géométrie probable des pans de toiture.
+RÈGLES ABSOLUES :
+1. Utilise l'emprise cadastrale (si fournie ci-dessus) comme limite — pans à l'intérieur uniquement
+2. Pentes/azimuts Solar API sont fiables, utilise-les
+3. Fusionne les pans de même azimut (±15°)
+4. Architecture belge typique : 2 pans pour maison mitoyenne, 4 pour villa à croupes, plus pour décrochements
+5. Le nombre de pans peut être autant que nécessaire pour couvrir l'emprise réelle du bâtiment
 
-Pour chaque pan, fournis :
+Pour chaque pan :
 - name : "Pan Sud", "Pan Nord", etc.
-- offsets_m : tableau de 4-6 points [[est_m, nord_m]] en mètres depuis le centre GPS
-  (est positif = Est, nord positif = Nord)
-- pitch_deg : pente estimée
-- azimuth_deg : direction du BAS de pente (0=N, 90=E, 180=S, 270=O)
+- offsets_m : 4 points [[est_m, nord_m]] en mètres depuis le centre GPS
+  Taille typique : profondeur 4-7m, largeur 8-15m selon le bâtiment
+- pitch_deg : valeur Solar API
+- azimuth_deg : valeur Solar API
 
-Plus :
-- building_eave_height_m, building_type, notes
+Globalement : building_eave_height_m (défaut 6), building_type, notes
 
-RÉPONDS UNIQUEMENT EN JSON :
-{"planes":[{"name":"...","offsets_m":[[e,n],...],"pitch_deg":35,"azimuth_deg":180}],"building_eave_height_m":6.0,"building_type":"...","notes":"..."}`;
+JSON UNIQUEMENT :
+{"planes":[{"name":"Pan Sud","offsets_m":[[-4,-3],[4,-3],[4,3],[-4,3]],"pitch_deg":35,"azimuth_deg":180}],"building_eave_height_m":6.0,"building_type":"2 pans pignon","notes":""}`;
     }
 
     // ── 3. Call Claude API ────────────────────────────────────────────
@@ -1386,11 +1112,10 @@ RÉPONDS UNIQUEMENT EN JSON :
         'Content-Type':'application/json',
         'x-api-key':getAnthropicKey().trim(),
         'anthropic-version':'2023-06-01',
-        'anthropic-beta':'',
         'anthropic-dangerous-direct-browser-access':'true',
       },
       body:JSON.stringify({
-        model:'claude-opus-4-5-20251101',
+        model:'claude-sonnet-4-6',
         max_tokens:2000,
         messages:[{role:'user',content:msgContent}],
       }),
@@ -1483,7 +1208,6 @@ function _applyAIResult(result,coordMode,zoom,W,H,hasImg){
       seg.drawnArea=+(google.maps.geometry.spherical.computeArea(seg.polygon.getPath())).toFixed(2);
       seg.footprintArea=seg.drawnArea;refreshArea(seg);
       drawSeg(seg);updateMetrics();updateTable();
-      if(showPrisms)scheduleGL();
       if(detId===seg.id)renderRightPanel();
     };
     ['set_at','insert_at','remove_at'].forEach(ev=>poly.getPath().addListener(ev,upd));
@@ -1502,7 +1226,6 @@ function _applyAIResult(result,coordMode,zoom,W,H,hasImg){
   if(!created){toast('❌ IA : polygones invalides dans la réponse — réessayez');return;}
 
   updateMetrics();renderRightPanel();updateTable();
-  if(showPrisms)buildGLMeshes();
 
   const src=hasImg?'Claude + image sat.':'Claude + GPS/Solar';
   document.getElementById('mSrc').textContent=src+' · '+(result.building_type||'');
@@ -1560,7 +1283,7 @@ function _restoreSnap(state){
         fillOpacity:.38,strokeWeight:2.5,editable:true,clickable:true,zIndex:10,map:mapInst,
       });
       seg.polygon=poly;seg.overlay=poly;
-      const upd=()=>{seg.drawnArea=+(google.maps.geometry.spherical.computeArea(poly.getPath())).toFixed(2);seg.footprintArea=seg.drawnArea;refreshArea(seg);drawSeg(seg);updateMetrics();updateTable();if(showPrisms)scheduleGL();};
+      const upd=()=>{seg.drawnArea=+(google.maps.geometry.spherical.computeArea(poly.getPath())).toFixed(2);seg.footprintArea=seg.drawnArea;refreshArea(seg);drawSeg(seg);updateMetrics();updateTable();};
       ['set_at','insert_at','remove_at'].forEach(ev=>poly.getPath().addListener(ev,upd));
       poly.addListener('click',e=>{if(azEdgeMode)applyEdgeAz(seg,e.latLng);else if(satSnapMode&&selId===seg.id)_snapVertexToClick(seg,e.latLng);else clickSeg(seg.id);});
       poly.addListener('mouseover',()=>hov(seg.id,true));
@@ -1574,7 +1297,6 @@ function _restoreSnap(state){
   });
   selId=null;detId=null;
   updateMetrics();renderRightPanel();updateTable();
-  if(showPrisms)buildGLMeshes();
 }
 
 // Keyboard shortcuts
@@ -1584,14 +1306,19 @@ document.addEventListener('keydown',e=>{
 });
 
 // ════════════════════════════════════════════
+// ════════════════════════════════════════════
 // VERTEX SNAPPING (cross-polygon + 90° constraint)
 // ════════════════════════════════════════════
-const SNAP_DIST_M = 1.5; // snap threshold in metres
-const SNAP_ANGLE_DEG = 7; // snap to 90° if within 7°
+const SNAP_DIST_M = 1.5;
+const SNAP_ANGLE_DEG = 7;
+let _snapping = false; // Guard against infinite loop
 
 function _attachSnapListeners(poly,seg){
   poly.getPath().addListener('set_at',(idx)=>{
-    _applyVertexSnap(poly,seg,idx);
+    if(_snapping) return; // Prevent recursive calls
+    _snapping=true;
+    try{ _applyVertexSnap(poly,seg,idx); }
+    finally{ _snapping=false; }
   });
 }
 
@@ -1601,43 +1328,37 @@ function _applyVertexSnap(poly,seg,movedIdx){
   const latM=111320,lngM=111320*Math.cos(d2r(cLat));
 
   // 1) Snap to nearby vertex from OTHER polygons
-  let snapped=false;
-  for(const other of segs){
+  let snapTarget=null;
+  outer:for(const other of segs){
     if(other.id===seg.id||!other.polygon) continue;
     const op=other.polygon.getPath();
     for(let i=0;i<op.getLength();i++){
       const v=op.getAt(i);
       const dx=(moved.lng()-v.lng())*lngM,dy=(moved.lat()-v.lat())*latM;
-      if(Math.sqrt(dx*dx+dy*dy)<SNAP_DIST_M){
-        path.setAt(movedIdx,v);snapped=true;break;
-      }
+      if(Math.sqrt(dx*dx+dy*dy)<SNAP_DIST_M){ snapTarget=v; break outer; }
     }
-    if(snapped)break;
   }
+  if(snapTarget){ path.setAt(movedIdx,snapTarget); return; }
 
   // 2) Snap to 90° angle
-  if(!snapped){
-    const n=path.getLength();
-    const prev=path.getAt((movedIdx-1+n)%n);
-    const next=path.getAt((movedIdx+1)%n);
-    const curr=snapped?path.getAt(movedIdx):moved;
-    const v1x=(prev.lng()-curr.lng())*lngM,v1y=(prev.lat()-curr.lat())*latM;
-    const v2x=(next.lng()-curr.lng())*lngM,v2y=(next.lat()-curr.lat())*latM;
-    const l1=Math.sqrt(v1x*v1x+v1y*v1y),l2=Math.sqrt(v2x*v2x+v2y*v2y);
-    if(l1>0&&l2>0){
-      const cosA=(v1x*v2x+v1y*v2y)/(l1*l2);
-      const angleDeg=Math.acos(Math.max(-1,Math.min(1,cosA)))*180/Math.PI;
-      if(Math.abs(angleDeg-90)<SNAP_ANGLE_DEG){
-        // Project curr to make exact 90°: move along bisector
-        const bx=v1x/l1+v2x/l2,by=v1y/l1+v2y/l2;
-        const bl=Math.sqrt(bx*bx+by*by);
-        if(bl>0){
-          const dot=(v1x*bx+v1y*by)/(l1*bl);
-          const move=dot*(l1*(1/Math.cos(d2r(90-angleDeg))-1));
-          const newLat=curr.lat()+(by/bl)*move/latM;
-          const newLng=curr.lng()+(bx/bl)*move/lngM;
-          path.setAt(movedIdx,new google.maps.LatLng(newLat,newLng));
-        }
+  const n=path.getLength();
+  const prev=path.getAt((movedIdx-1+n)%n);
+  const next=path.getAt((movedIdx+1)%n);
+  const v1x=(prev.lng()-moved.lng())*lngM, v1y=(prev.lat()-moved.lat())*latM;
+  const v2x=(next.lng()-moved.lng())*lngM, v2y=(next.lat()-moved.lat())*latM;
+  const l1=Math.sqrt(v1x*v1x+v1y*v1y), l2=Math.sqrt(v2x*v2x+v2y*v2y);
+  if(l1>0.5&&l2>0.5){
+    const cosA=(v1x*v2x+v1y*v2y)/(l1*l2);
+    const angleDeg=Math.acos(Math.max(-1,Math.min(1,cosA)))*180/Math.PI;
+    if(Math.abs(angleDeg-90)<SNAP_ANGLE_DEG){
+      // Move vertex along the bisector to make exact 90°
+      const bx=v1x/l1+v2x/l2, by=v1y/l1+v2y/l2;
+      const bl=Math.sqrt(bx*bx+by*by);
+      if(bl>0){
+        const correction=(l1*(1/Math.cos(d2r(90-angleDeg))-1));
+        const newLat=moved.lat()+(by/bl)*correction/latM;
+        const newLng=moved.lng()+(bx/bl)*correction/lngM;
+        path.setAt(movedIdx,new google.maps.LatLng(newLat,newLng));
       }
     }
   }
@@ -1686,7 +1407,6 @@ function _snapVertexToClick(seg,clickLL){
     saveSnapshot();
     path.setAt(minI,clickLL);
     drawSeg(seg);updateMetrics();updateTable();
-    if(showPrisms)scheduleGL();
   }
 }
 
@@ -1782,7 +1502,7 @@ function _snapVerticesToEdges(seg,edges,W,H,cLat2,cLng2,zoom){
       path.setAt(i,new google.maps.LatLng(lat,lng));
     }
   }
-  drawSeg(seg);updateMetrics();updateTable();if(showPrisms)scheduleGL();
+  drawSeg(seg);updateMetrics();updateTable();
 }
 
 // ── Update setDMode to handle snap mode ───────────────────────────────────────
@@ -1810,18 +1530,35 @@ function computeOrientedPoly(seg){
     {x:(bb.sw.longitude-cLng2)*lngM, y:(bb.sw.latitude-cLat2)*latM},
   ];
 
-  // Azimuth direction vectors (East/North convention)
   const az=d2r(seg.azimuth);
-  const sx=Math.sin(az), sy=Math.cos(az);   // downslope (azimuth dir)
-  const rx=Math.cos(az), ry=-Math.sin(az);  // ridge (perpendicular)
+  const sx=Math.sin(az), sy=Math.cos(az);
+  const rx=Math.cos(az), ry=-Math.sin(az);
 
-  // Project all corners onto slope and ridge axes → minimum oriented bounding rect
+  // Project corners to get dimensions in slope/ridge directions
   const sp=corners.map(c=>c.x*sx+c.y*sy);
   const rp=corners.map(c=>c.x*rx+c.y*ry);
-  const minS=Math.min(...sp),maxS=Math.max(...sp);
-  const minR=Math.min(...rp),maxR=Math.max(...rp);
+  let minS=Math.min(...sp),maxS=Math.max(...sp);
+  let minR=Math.min(...rp),maxR=Math.max(...rp);
 
-  // 4 corners of oriented rectangle → back to lat/lng
+  // ── Scale to match Solar API actual area ───────────────────────
+  // Solar API gives the real inclined area → footprint = area × cos(pitch)
+  if(seg.apiArea && seg.apiPitch !== undefined){
+    const targetFootprint = seg.apiArea * Math.cos(d2r(seg.apiPitch));
+    const currentW = maxR - minR; // ridge width
+    const currentD = maxS - minS; // slope depth
+    const currentArea = currentW * currentD;
+    if(currentArea > 0.5 && targetFootprint > 0.5){
+      // Scale both dimensions equally to match target area
+      const scaleFactor = Math.sqrt(targetFootprint / currentArea);
+      const midS = (minS + maxS) / 2;
+      const midR = (minR + maxR) / 2;
+      minS = midS - (currentD/2) * scaleFactor;
+      maxS = midS + (currentD/2) * scaleFactor;
+      minR = midR - (currentW/2) * scaleFactor;
+      maxR = midR + (currentW/2) * scaleFactor;
+    }
+  }
+
   return [
     {s:minS,r:minR},{s:maxS,r:minR},{s:maxS,r:maxR},{s:minS,r:maxR}
   ].map(p=>({
@@ -1858,7 +1595,6 @@ function recalibrerPans(){
       seg.footprintArea=seg.drawnArea;refreshArea(seg);
       drawSeg(seg);updateMetrics();updateTable();
       if(detId===seg.id)renderRightPanel();
-      if(showPrisms)buildGLMeshes();
     };
     ['set_at','insert_at','remove_at'].forEach(ev=>poly.getPath().addListener(ev,upd));
     poly.addListener('click',e=>{if(azEdgeMode)applyEdgeAz(seg,e.latLng);else if(satSnapMode&&selId===seg.id)_snapVertexToClick(seg,e.latLng);else clickSeg(seg.id);});
@@ -1869,7 +1605,6 @@ function recalibrerPans(){
   });
   if(n===0){toast('Tous les pans sont déjà des polygones éditables');return;}
   redrawAll();updateMetrics();renderRightPanel();updateTable();
-  if(showPrisms)buildGLMeshes();
   toast(n+' pan(s) recalibré(s) ✓ — déplacez les sommets verts pour ajuster');
 }
 
@@ -1965,7 +1700,6 @@ function mergeSelectedPans(){
     merged.footprintArea=merged.drawnArea;refreshArea(merged);
     drawSeg(merged);updateMetrics();updateTable();
     if(detId===merged.id)renderRightPanel();
-    if(showPrisms)buildGLMeshes();
   };
   ['set_at','insert_at','remove_at'].forEach(ev=>poly.getPath().addListener(ev,upd));
   poly.addListener('click',e=>{if(azEdgeMode)applyEdgeAz(merged,e.latLng);else clickSeg(merged.id);});
@@ -1974,7 +1708,6 @@ function mergeSelectedPans(){
 
   segs.push(merged);selId=mergedId;detId=mergedId;
   drawSeg(merged);updateMetrics();renderRightPanel();updateTable();
-  if(showPrisms)buildGLMeshes();
   toast('Pans fusionnés ✓ — '+sel.length+' → 1 · ajustez les sommets si nécessaire');
 }
 
@@ -2000,7 +1733,7 @@ function finishManual(poly,col){
     drawnArea,footprintArea:drawnArea,bb:null,center:null,sunQ:null,notes:"",eaveH:6,terrainData:null,terrainEnabled:false,baseElevation:null,
   };
   seg.area=parseFloat(getArea(seg).toFixed(2));
-  const upd=()=>{seg.drawnArea=+(google.maps.geometry.spherical.computeArea(seg.polygon.getPath())).toFixed(2);seg.footprintArea=seg.drawnArea;refreshArea(seg);drawSeg(seg);updateMetrics();updateTable();if(detId===seg.id)renderRightPanel();if(showPrisms)buildGLMeshes();if(show3D)buildTMeshes();};
+  const upd=()=>{seg.drawnArea=+(google.maps.geometry.spherical.computeArea(seg.polygon.getPath())).toFixed(2);seg.footprintArea=seg.drawnArea;refreshArea(seg);drawSeg(seg);updateMetrics();updateTable();if(detId===seg.id)renderRightPanel();if(show3D)buildTMeshes();};
   ['set_at','insert_at','remove_at'].forEach(ev=>poly.getPath().addListener(ev,upd));
   poly.addListener('click',e=>{if(azEdgeMode)applyEdgeAz(seg,e.latLng);else if(satSnapMode&&selId===seg.id)_snapVertexToClick(seg,e.latLng);else clickSeg(seg.id);});
   poly.addListener('mouseover',()=>hov(seg.id,true));
@@ -2010,8 +1743,7 @@ function finishManual(poly,col){
   segs.push(seg);selId=id;detId=id;
   drawSeg(seg);updateMetrics();updateTable();renderRightPanel();
   document.getElementById('dtDel').style.display='inline-flex';
-  document.getElementById('dtAz').style.display='inline-flex';
-  if(showPrisms)buildGLMeshes();if(show3D)buildTMeshes();
+  document.getElementById('dtAz').style.display='inline-flex';if(show3D)buildTMeshes();
 }
 
 function convertToPoly(id){
@@ -2025,7 +1757,7 @@ function convertToPoly(id){
   seg.polygon=poly;seg.overlay=poly;seg.source='manual';
   seg.drawnArea=+(google.maps.geometry.spherical.computeArea(poly.getPath())).toFixed(2);
   seg.footprintArea=seg.drawnArea;
-  const upd=()=>{seg.drawnArea=+(google.maps.geometry.spherical.computeArea(seg.polygon.getPath())).toFixed(2);seg.footprintArea=seg.drawnArea;refreshArea(seg);drawSeg(seg);updateMetrics();updateTable();if(detId===seg.id)renderRightPanel();if(showPrisms)buildGLMeshes();if(show3D)buildTMeshes();};
+  const upd=()=>{seg.drawnArea=+(google.maps.geometry.spherical.computeArea(seg.polygon.getPath())).toFixed(2);seg.footprintArea=seg.drawnArea;refreshArea(seg);drawSeg(seg);updateMetrics();updateTable();if(detId===seg.id)renderRightPanel();if(show3D)buildTMeshes();};
   ['set_at','insert_at','remove_at'].forEach(ev=>poly.getPath().addListener(ev,upd));
   poly.addListener('click',e=>{if(azEdgeMode)applyEdgeAz(seg,e.latLng);else clickSeg(seg.id);});
   poly.addListener('mouseover',()=>hov(seg.id,true));
@@ -2101,8 +1833,7 @@ function deleteSelected(){
   selId=null;detId=null;azEdgeMode=false;
   document.getElementById('dtDel').style.display='none';
   document.getElementById('dtAz').style.display='none';
-  updateMetrics();renderRightPanel();updateTable();redrawAll();
-  if(showPrisms)buildGLMeshes();if(show3D)buildTMeshes();
+  updateMetrics();renderRightPanel();updateTable();redrawAll();if(show3D)buildTMeshes();
 }
 
 function setDMode(mode){
@@ -2153,8 +1884,8 @@ function setF(id,field,val){
   }
   updateMetrics();updateTable();
   // Real-time 3D: debounced for sliders, immediate for others
-  if(['pitch','azimuth','eaveH'].includes(field)){ scheduleGL(); if(show3D)buildTMeshes(); }
-  else{ if(showPrisms)buildGLMeshes(); if(show3D)buildTMeshes(); }
+  if(['pitch','azimuth','eaveH'].includes(field)){ if(show3D)buildTMeshes(); }
+  else{ if(show3D)buildTMeshes(); }
 }
 
 // ════════════════════════════════════════════
@@ -2406,6 +2137,167 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Enter'&&document.getElementById('akModal')?.classList.contains('vis')) confirmAkKey();
   if(e.key==='Escape'&&document.getElementById('akModal')?.classList.contains('vis')) closeAkModal();
 });
+
+// ════════════════════════════════════════════
+// ÉCHAFAUDAGE — estimation ITE
+// ════════════════════════════════════════════
+let _scaffOpen=false;
+function toggleScaffolding(){
+  _scaffOpen=!_scaffOpen;
+  const panel=document.getElementById('scaffPanel');
+  if(panel) panel.style.display=_scaffOpen?'block':'none';
+  if(_scaffOpen) renderScaffolding();
+}
+
+function renderScaffolding(){
+  const div=document.getElementById('scaffContent');if(!div)return;
+  if(!segs.length){div.innerHTML='<p style="color:var(--muted);font-size:12px">Aucun pan détecté.</p>';return;}
+
+  const latM=111320,lngM=111320*Math.cos(d2r(cLat));
+  const eaveH=segs[0]?.eaveH||6;
+  const ridgeH=segs.reduce((mx,s)=>{
+    const fp=getFootprint(s);if(!fp.length)return mx;
+    const pts=fp.map(v=>({x:(v.lng-cLng)*lngM,z:-(v.lat-cLat)*latM}));
+    const n=pts.length,az=d2r(s.azimuth),dax=Math.sin(az),daz=-Math.cos(az);
+    const cx=pts.reduce((a,p)=>a+p.x,0)/n,cz=pts.reduce((a,p)=>a+p.z,0)/n;
+    const projs=pts.map(p=>-dax*(p.x-cx)-daz*(p.z-cz));
+    const range=Math.max(Math.max(...projs)-Math.min(...projs),0.5);
+    const rH=(s.eaveH||6)+range*Math.tan(d2r(s.pitch));
+    return Math.max(mx,rH);
+  },eaveH);
+
+  // Building perimeter from all roof footprints (convex hull)
+  const allPts=[];segs.forEach(s=>allPts.push(...getFootprint(s)));
+  const hull=allPts.length>=3?convexHull(allPts):allPts;
+  let perimeter=0;
+  for(let i=0;i<hull.length;i++){
+    const a=hull[i],b=hull[(i+1)%hull.length];
+    const dx=(b.lng-a.lng)*lngM,dy=(b.lat-a.lat)*latM;
+    perimeter+=Math.sqrt(dx*dx+dy*dy);
+  }
+
+  const scaffBase=perimeter*eaveH;
+  const scaffTotal=scaffBase*1.15; // +15% angles/joints
+  const scaffRidge=perimeter*ridgeH*1.15;
+
+  div.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">
+      <div style="background:var(--bg);border-radius:7px;padding:8px;text-align:center">
+        <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Périmètre bât.</div>
+        <div style="font-size:18px;font-weight:700">${perimeter.toFixed(1)}<span style="font-size:11px;color:var(--muted)"> m</span></div>
+      </div>
+      <div style="background:var(--bg);border-radius:7px;padding:8px;text-align:center">
+        <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Gouttière basse</div>
+        <div style="font-size:18px;font-weight:700">${eaveH.toFixed(1)}<span style="font-size:11px;color:var(--muted)"> m</span></div>
+      </div>
+      <div style="background:var(--bg);border-radius:7px;padding:8px;text-align:center">
+        <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Faîtière max</div>
+        <div style="font-size:18px;font-weight:700">${ridgeH.toFixed(1)}<span style="font-size:11px;color:var(--muted)"> m</span></div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div style="background:#E8F5E9;border-radius:7px;padding:10px;text-align:center">
+        <div style="font-size:9px;color:#2E7D32;font-weight:700;text-transform:uppercase">Échafaudage gouttière</div>
+        <div style="font-size:22px;font-weight:700;color:#1B5E20">${scaffTotal.toFixed(0)}<span style="font-size:13px"> m²</span></div>
+        <div style="font-size:9px;color:#388E3C">Périmètre × ${eaveH.toFixed(1)}m × 1,15</div>
+      </div>
+      <div style="background:#E3F0FA;border-radius:7px;padding:10px;text-align:center">
+        <div style="font-size:9px;color:#1565C0;font-weight:700;text-transform:uppercase">Échafaudage faîtière</div>
+        <div style="font-size:22px;font-weight:700;color:#0D2B45">${scaffRidge.toFixed(0)}<span style="font-size:13px"> m²</span></div>
+        <div style="font-size:9px;color:#1976D2">Périmètre × ${ridgeH.toFixed(1)}m × 1,15</div>
+      </div>
+    </div>`;
+}
+
+// ════════════════════════════════════════════
+// RAPPORT PDF
+// ════════════════════════════════════════════
+async function generatePDFReport(){
+  // Load jsPDF from CDN
+  if(!window.jspdf){
+    await new Promise((res,rej)=>{
+      const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+      s.onload=res;s.onerror=rej;document.head.appendChild(s);
+    });
+  }
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const sel=segs.filter(s=>s.selected);
+  const tot=sel.reduce((a,s)=>a+getArea(s),0);
+  const date=new Date().toLocaleDateString('fr-BE');
+
+  // Header
+  doc.setFillColor(59,109,17);doc.rect(0,0,210,22,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(16);doc.setFont('helvetica','bold');
+  doc.text('WeCover — Mesure Toiture ITE',14,10);
+  doc.setFontSize(9);doc.setFont('helvetica','normal');
+  doc.text('Rapport généré le '+date,14,16);
+
+  // Address
+  doc.setTextColor(30,30,30);doc.setFontSize(11);doc.setFont('helvetica','bold');
+  doc.text('Adresse :',14,32);
+  doc.setFont('helvetica','normal');doc.text(cLabel||'—',50,32);
+
+  // KPIs
+  doc.setFillColor(234,243,222);doc.roundedRect(14,38,86,22,3,3,'F');
+  doc.setFillColor(227,238,250);doc.roundedRect(110,38,86,22,3,3,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(18);
+  doc.setTextColor(59,109,17);doc.text(tot.toFixed(1)+' m²',22,51);
+  doc.setTextColor(21,101,192);doc.text(sel.length+' pan(s)',118,51);
+  doc.setFontSize(8);doc.setFont('helvetica','normal');
+  doc.setTextColor(39,80,10);doc.text('Surface ITE inclinée (sélectionnée)',22,57);
+  doc.setTextColor(13,43,69);doc.text('Pans sélectionnés',118,57);
+
+  // Table
+  let y=72;
+  doc.setFillColor(250,250,248);doc.rect(14,y,182,7,'F');
+  doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(100,100,90);
+  ['Pan','Surface ITE','Pente','Orientation','Gouttière','Faîtière'].forEach((h,i)=>{
+    doc.text(h,[14,56,90,115,148,168][i],y+5);
+  });
+  y+=8;
+  sel.forEach((s,idx)=>{
+    if(y>270){doc.addPage();y=20;}
+    if(idx%2===0){doc.setFillColor(248,252,240);doc.rect(14,y,182,7,'F');}
+    doc.setFont('helvetica','normal');doc.setTextColor(30,30,30);doc.setFontSize(8);
+    const fp=getFootprint(s);
+    const latM=111320,lngM=111320*Math.cos(d2r(cLat));
+    const pts=fp.map(v=>({x:(v.lng-cLng)*lngM,z:-(v.lat-cLat)*latM}));
+    const n=pts.length||1,az=d2r(s.azimuth),dax=Math.sin(az),daz=-Math.cos(az);
+    const cx=pts.reduce((a,p)=>a+p.x,0)/n,cz=pts.reduce((a,p)=>a+p.z,0)/n;
+    const projs=pts.map(p=>-dax*(p.x-cx)-daz*(p.z-cz));
+    const range=Math.max((projs.length?Math.max(...projs)-Math.min(...projs):0),0.5);
+    const ridgeH=((s.eaveH||6)+range*Math.tan(d2r(s.pitch))).toFixed(1);
+    doc.text(s.name,14,y+5);
+    doc.text(getArea(s).toFixed(2)+' m²',56,y+5);
+    doc.text(s.pitch.toFixed(0)+'°',90,y+5);
+    doc.text(azDir(s.azimuth)+' '+s.azimuth.toFixed(0)+'°',115,y+5);
+    doc.text((s.eaveH||6).toFixed(1)+' m',148,y+5);
+    doc.text(ridgeH+' m',168,y+5);
+    y+=7;
+  });
+
+  // Total
+  y+=3;doc.setFillColor(59,109,17);doc.rect(14,y,182,8,'F');
+  doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(9);
+  doc.text('TOTAL SURFACE ITE SÉLECTIONNÉE',14,y+5.5);
+  doc.text(tot.toFixed(2)+' m²',168,y+5.5);
+
+  // Footer
+  doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(150,150,140);
+  doc.text('WeCover — We Green Energy SRL · Ikaroslaan 83, 1930 Zaventem · we-green.be',14,285);
+  doc.text('Mesures indicatives sur base Google Solar API + orthophoto IGN. À confirmer sur site.',14,289);
+
+  doc.save('WeCover_Toiture_'+date.replace(/\//g,'-')+'.pdf');
+  toast('📄 Rapport PDF généré ✓');
+}
+
+// ════════════════════════════════════════════
+// GOOGLE PHOTOREALISTIC 3D TILES
+// Vue réelle des bâtiments (même source que Google Earth)
+// ════════════════════════════════════════════
+let _3dTilesOn=false;
 
 function setSL(on){document.getElementById('sico').innerHTML=on?'<span class="spin"></span>':'▲';document.getElementById('btnS').disabled=on;}
 function showErr(m){const b=document.getElementById('ebar');b.textContent=m;b.style.display='block';}
