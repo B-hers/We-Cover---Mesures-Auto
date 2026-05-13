@@ -252,6 +252,7 @@ tbody tr:last-child td{border-bottom:none}
         <span style="font-size:10px;color:var(--muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="maddr"></span>
         <button class="mbtn" id="btnAerial" onclick="toggleAerial()" title="Orthophoto officielle belge IGN 25cm — bien plus nette que Google Maps" style="font-weight:700">🇧🇪 Photo BE</button>
         <button class="mbtn" id="btnAI" onclick="analyserIA()" title="Analyse IA : Claude détecte automatiquement les pans, pentes et azimuts" style="background:#6B5BE2;color:#fff;border-color:#6B5BE2;font-weight:700">🤖 IA</button>
+        <button class="mbtn" id="btnEdges" onclick="detectEdges()" title="Détection d'arêtes OpenCV sur orthophoto IGN — affiche les faîtages, gouttières, noues" style="background:#E67E22;color:#fff;border-color:#E67E22;font-weight:700">🔍 Arêtes</button>
         <div class="map-sep"></div>
         <button class="mbtn" onclick="openEarth()">🌍</button>
         <button class="mbtn" onclick="resetView()">⊙</button>
@@ -1036,6 +1037,109 @@ async function analyserIA(){
   }
 }
 
+let _detectedEdges=[], _detectedPanels=[], _edgePolylines=[], _panelPolylines=[];
+
+async function detectEdges(){
+  if(!cLat||!cLng){toast('Chargez une adresse d\'abord');return;}
+  const btn=document.getElementById('btnEdges');
+  const orig=btn.innerHTML;
+  btn.innerHTML='<span class="spin"></span> Détection…';btn.disabled=true;
+
+  try{
+    // Clear previous
+    _edgePolylines.forEach(p=>p.setMap(null));
+    _panelPolylines.forEach(p=>p.setMap(null));
+    _edgePolylines=[]; _panelPolylines=[];
+    _detectedEdges=[]; _detectedPanels=[];
+
+    toast('🔍 Téléchargement orthophoto + Canny+Hough…');
+    const zoom=Math.min(mapInst?.getZoom()||21,21);
+
+    const resp=await fetch(`${BACKEND_URL}/api/detect-edges`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        lat:cLat, lng:cLng, zoom,
+        source: 'auto',     // Auto-detect Wallonia/Flanders/Brussels
+        min_length_m: 1.0,  // ↓ Garde lucarnes/chiens-assis
+      }),
+    });
+    if(!resp.ok){
+      const e=await resp.text();
+      throw new Error('Backend '+resp.status+': '+e.slice(0,200));
+    }
+    const result=await resp.json();
+    _detectedEdges=result.lines||[];
+    _detectedPanels=result.panels||[];
+
+    if(!_detectedEdges.length && !_detectedPanels.length){
+      toast('🔍 Aucune arête détectée — image peut-être trop floue');
+      return;
+    }
+
+    // Render kept edges (orange thick) — main edges + lucarnes/chiens-assis
+    _detectedEdges.forEach((ln,i)=>{
+      const isLong = ln.length_m >= 3;
+      const line=new google.maps.Polyline({
+        path:[{lat:ln.lat1,lng:ln.lng1},{lat:ln.lat2,lng:ln.lng2}],
+        strokeColor: isLong ? '#FF8C00' : '#FFB347',  // Long=orange foncé, court=orange clair (lucarnes)
+        strokeOpacity:.9,
+        strokeWeight: isLong ? 3 : 2,
+        zIndex:3,
+        clickable:true,
+        map:mapInst,
+      });
+      line.addListener('mouseover',()=>line.setOptions({strokeColor:'#FF4500',strokeWeight:4,zIndex:8}));
+      line.addListener('mouseout',()=>line.setOptions({strokeColor: isLong?'#FF8C00':'#FFB347', strokeWeight: isLong?3:2, zIndex:3}));
+      line.addListener('click',()=>{
+        const type = isLong ? 'principale' : 'lucarne/chien-assis';
+        toast('Arête '+(i+1)+' · '+ln.length_m.toFixed(1)+'m · '+ln.angle_deg.toFixed(0)+'° · '+type);
+      });
+      _edgePolylines.push(line);
+    });
+
+    // Render solar panels hidden by default (cyan dotted) — visible on demand via btnPanels
+    _detectedPanels.forEach((ln)=>{
+      const line=new google.maps.Polyline({
+        path:[{lat:ln.lat1,lng:ln.lng1},{lat:ln.lat2,lng:ln.lng2}],
+        strokeColor:'#00BFFF',
+        strokeOpacity:.7,
+        strokeWeight:1.5,
+        zIndex:2,
+        icons:[{icon:{path:'M 0,-1 0,1', strokeOpacity:1, scale:2}, offset:'0', repeat:'8px'}],
+        clickable:false,
+        map:null,  // hidden by default
+      });
+      _panelPolylines.push(line);
+    });
+
+    const nLong = _detectedEdges.filter(e=>e.length_m>=3).length;
+    const nShort = _detectedEdges.length - nLong;
+    const nPanels = _detectedPanels.length;
+    toast(`✓ ${nLong} arêtes principales + ${nShort} lucarnes/chiens-assis · ${nPanels} panneaux solaires ignorés · ${result.source}`);
+
+  }catch(e){
+    console.error('Edge detection error:',e);
+    toast('❌ Erreur détection : '+e.message.slice(0,120));
+  }finally{
+    btn.innerHTML=orig;btn.disabled=false;
+  }
+}
+
+function togglePanelsVisibility(){
+  const anyVisible = _panelPolylines.some(p=>p.getMap()!==null);
+  _panelPolylines.forEach(p=>p.setMap(anyVisible?null:mapInst));
+  toast(anyVisible?'Panneaux solaires masqués':_panelPolylines.length+' panneaux solaires affichés (cyan)');
+}
+
+function clearEdges(){
+  _edgePolylines.forEach(p=>p.setMap(null));
+  _panelPolylines.forEach(p=>p.setMap(null));
+  _edgePolylines=[]; _panelPolylines=[];
+  _detectedEdges=[]; _detectedPanels=[];
+  toast('Arêtes masquées');
+}
+
 function _applyAIResult(result,coordMode,zoom,W,H,hasImg){
   if(!result?.planes?.length){toast('IA : aucun pan identifié dans la réponse');return;}
   saveSnapshot();
@@ -1056,9 +1160,9 @@ function _applyAIResult(result,coordMode,zoom,W,H,hasImg){
   // METER OFFSET → lat/lng
   const m2ll=(e_m,n_m)=>({lat:cLat+n_m/latM, lng:cLng+e_m/lngM});
 
-  // Remove old Solar API segments
-  segs.filter(s=>s.source==='api').forEach(s=>{if(s.overlay)s.overlay.setMap(null);if(s.label)s.label.setMap(null);});
-  segs=segs.filter(s=>s.source!=='api');
+  // Clear ALL existing segments (recalibrerPans converts api→manual, so filter was useless)
+  segs.forEach(s=>{if(s.overlay)s.overlay.setMap(null);if(s.label)s.label.setMap(null);});
+  segs=[];
   colorIdx=0;
 
   let created=0;
