@@ -253,6 +253,7 @@ tbody tr:last-child td{border-bottom:none}
         <button class="mbtn" id="btnAerial" onclick="toggleAerial()" title="Orthophoto officielle belge IGN 25cm — bien plus nette que Google Maps" style="font-weight:700">🇧🇪 Photo BE</button>
         <button class="mbtn" id="btnAI" onclick="analyserIA()" title="Analyse IA : Claude détecte automatiquement les pans, pentes et azimuts" style="background:#6B5BE2;color:#fff;border-color:#6B5BE2;font-weight:700">🤖 IA</button>
         <button class="mbtn" id="btnEdges" onclick="detectEdges()" title="Détection d'arêtes OpenCV sur orthophoto IGN — affiche les faîtages, gouttières, noues" style="background:#E67E22;color:#fff;border-color:#E67E22;font-weight:700">🔍 Arêtes</button>
+        <button class="mbtn" id="btnRefine" onclick="refineFootprint()" title="Claude affine le polygone cadastral OSM pour le caler à 100% sur la toiture visible" style="background:#16A085;color:#fff;border-color:#16A085;font-weight:700">🎯 Affiner cadastre</button>
         <div class="map-sep"></div>
         <button class="mbtn" onclick="openEarth()">🌍</button>
         <button class="mbtn" onclick="resetView()">⊙</button>
@@ -1060,8 +1061,9 @@ async function detectEdges(){
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         lat:cLat, lng:cLng, zoom,
-        source: 'auto',     // Auto-detect Wallonia/Flanders/Brussels
-        min_length_m: 1.0,  // ↓ Garde lucarnes/chiens-assis
+        source: 'auto',
+        min_length_m: 1.0,
+        building_footprint: cBuildingFootprint || null,  // ← filtre les lignes au bâtiment
       }),
     });
     if(!resp.ok){
@@ -1138,6 +1140,77 @@ function clearEdges(){
   _edgePolylines=[]; _panelPolylines=[];
   _detectedEdges=[]; _detectedPanels=[];
   toast('Arêtes masquées');
+}
+
+// ────────────────────────────────────────────────────
+// 🎯 Affiner cadastre IA — Claude raffine le polygone OSM à 100%
+// ────────────────────────────────────────────────────
+async function refineFootprint(){
+  if(!cLat||!cLng){toast('Chargez une adresse d\'abord');return;}
+  if(!cBuildingFootprint||cBuildingFootprint.length<3){
+    toast('❌ Pas de cadastre OSM à affiner — relancez Analyser');
+    return;
+  }
+  const btn=document.getElementById('btnRefine');
+  const orig=btn.innerHTML;
+  btn.innerHTML='<span class="spin"></span> Affinage…';btn.disabled=true;
+
+  try{
+    toast('🎯 Claude analyse la toiture pour caler le cadastre…');
+
+    // Capture l'image satellite courante pour l'envoyer à Claude
+    let imgB64=null;
+    try{ imgB64=await imgBase64(cLat,cLng,640,640,21); }catch{}
+
+    const resp=await fetch(`${BACKEND_URL}/api/refine-footprint`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        lat:cLat, lng:cLng,
+        label: addrInput?.value || '',
+        osm_footprint: cBuildingFootprint,
+        zoom: 21,
+        image_base64: imgB64,
+      }),
+    });
+    if(!resp.ok){
+      const e=await resp.text();
+      throw new Error('Backend '+resp.status+': '+e.slice(0,200));
+    }
+    const result=await resp.json();
+    const refined=result.refined_footprint||[];
+    if(refined.length<3){
+      toast('❌ IA n\'a pas retourné un polygone valide');
+      return;
+    }
+
+    // Affiche le polygone affiné en vert par-dessus le cadastre OSM
+    if(window._refinedFootprintPoly){window._refinedFootprintPoly.setMap(null);}
+    window._refinedFootprintPoly=new google.maps.Polygon({
+      paths: refined,
+      strokeColor:'#16A085',    // vert affiné (différent de l'orange OSM)
+      strokeWeight:3,
+      strokeOpacity:.95,
+      fillColor:'#16A085',
+      fillOpacity:.10,
+      clickable:false,
+      zIndex:6,                  // au-dessus du cadastre OSM (zIndex 5)
+      map: mapInst,
+    });
+
+    // Update globale → future détection d'arêtes utilisera ce footprint affiné
+    cBuildingFootprint = refined;
+
+    const conf=result.confidence ? ` · conf ${(result.confidence*100|0)}%` : '';
+    toast(`✓ Cadastre affiné : ${result.original_count}→${refined.length} sommets${conf} · ${result.notes||''}`.slice(0,180));
+    console.log('Refined footprint:', result);
+
+  }catch(e){
+    console.error('Refine error:',e);
+    toast('❌ Affinage : '+e.message.slice(0,120));
+  }finally{
+    btn.innerHTML=orig;btn.disabled=false;
+  }
 }
 
 function _applyAIResult(result,coordMode,zoom,W,H,hasImg){
