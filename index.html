@@ -1164,10 +1164,7 @@ async function refineFootprint(){
   try{
     toast('🎯 Claude analyse la toiture pour caler le cadastre…');
 
-    // Capture l'image satellite courante pour l'envoyer à Claude
-    let imgB64=null;
-    try{ imgB64=await imgBase64(cLat,cLng,640,640,21); }catch{}
-
+    // Backend fetches image from Belgian WMS automatically if not provided
     const resp=await fetch(`${BACKEND_URL}/api/refine-footprint`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -1176,7 +1173,7 @@ async function refineFootprint(){
         label: document.getElementById('addr')?.value || '',
         osm_footprint: cBuildingFootprint,
         zoom: 21,
-        image_base64: imgB64,
+        // image_base64: null (backend fetches from Belgian WMS)
       }),
     });
     if(!resp.ok){
