@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>WeCover ‚Äî Mesure Toiture</title>
+<title>WeCover — Mesure Toiture</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -206,62 +206,62 @@ tbody tr:last-child td{border-bottom:none}
 
 <div class="hdr">
   <div class="logo">WC</div>
-  <div><div class="logo-t">WeCover ‚Äî Mesure Toiture</div><div class="logo-s">Google Solar API ¬∑ LiDAR Belgique ¬∑ Devis ITE</div></div>
+  <div><div class="logo-t">WeCover — Mesure Toiture</div><div class="logo-s">Google Solar API · LiDAR Belgique · Devis ITE</div></div>
   <div class="hdr-mode">
-    <button class="mdbtn on" id="mA" onclick="setMode('analyse')">üìä Analyse</button>
-    <button class="mdbtn" id="mD" onclick="setMode('designer')">‚úè Designer</button>
+    <button class="mdbtn on" id="mA" onclick="setMode('analyse')">📊 Analyse</button>
+    <button class="mdbtn" id="mD" onclick="setMode('designer')">✏ Designer</button>
   </div>
 </div>
 
 <div class="scard">
-  <div class="warn">Cl√© API int√©gr√©e ‚Äî usage interne WeCover. Pour la vue 3D sur carte, un MapID production est requis en d√©ploiement (986c697e2ebf204c782b2d6d pour tests).</div>
+  <div class="warn">Clé API intégrée — usage interne WeCover. Pour la vue 3D sur carte, un MapID production est requis en déploiement (986c697e2ebf204c782b2d6d pour tests).</div>
   <div class="srow">
-    <input id="addr" placeholder="Adresse ‚Äî ou coordonn√©es GPS : 50.8318, 4.3971" />
-    <button class="btn-s" id="btnS" onclick="doSearch()"><span id="sico">‚ñ≤</span> Analyser</button>
+    <input id="addr" placeholder="Adresse — ou coordonnées GPS : 50.8318, 4.3971" />
+    <button class="btn-s" id="btnS" onclick="doSearch()"><span id="sico">▲</span> Analyser</button>
   </div>
   <div class="ebar" id="ebar"></div>
 </div>
 
 <div id="res" style="display:none">
   <div class="metrics">
-    <div class="metric"><div class="mlbl">Surface ITE (inclin√©e)</div><div class="mval" id="mTot">‚Äî<span class="mu"> m¬≤</span></div></div>
-    <div class="metric"><div class="mlbl">Pans d√©tect√©s</div><div class="mval" id="mPans">‚Äî</div></div>
-    <div class="metric"><div class="mlbl">S√©lectionn√©s</div><div class="mval" id="mSel">‚Äî</div></div>
-    <div class="metric"><div class="mlbl">Source</div><div class="mval" id="mSrc" style="font-size:13px;line-height:1.3">‚Äî</div></div>
+    <div class="metric"><div class="mlbl">Surface ITE (inclinée)</div><div class="mval" id="mTot">—<span class="mu"> m²</span></div></div>
+    <div class="metric"><div class="mlbl">Pans détectés</div><div class="mval" id="mPans">—</div></div>
+    <div class="metric"><div class="mlbl">Sélectionnés</div><div class="mval" id="mSel">—</div></div>
+    <div class="metric"><div class="mlbl">Source</div><div class="mval" id="mSrc" style="font-size:13px;line-height:1.3">—</div></div>
   </div>
 
   <div class="split">
     <!-- Map card -->
     <div class="mcard">
       <div class="desbar" id="desbar">
-        <button class="dtb on" id="dtDraw" onclick="startDraw()">‚úè Nouveau pan</button>
-        <button class="dtb" id="dtEdit" onclick="toggleEdit()">‚ü≥ Modifier</button>
-        <button class="dtb del" id="dtDel" onclick="deleteSelected()" style="display:none">üóë</button>
-        <button class="dtb" id="dtAz" onclick="toggleAzMode()" style="display:none" title="Cliquer un c√¥t√© pour l'azimut">üß≠ Azimut c√¥t√©</button>
-        <button class="dtb" id="dtSnap" onclick="toggleSatSnap()" style="display:none" title="Cliquer sur le toit pour aligner ce sommet">üéØ Aligner</button>
+        <button class="dtb on" id="dtDraw" onclick="startDraw()">✏ Nouveau pan</button>
+        <button class="dtb" id="dtEdit" onclick="toggleEdit()">⟳ Modifier</button>
+        <button class="dtb del" id="dtDel" onclick="deleteSelected()" style="display:none">🗑</button>
+        <button class="dtb" id="dtAz" onclick="toggleAzMode()" style="display:none" title="Cliquer un côté pour l'azimut">🧭 Azimut côté</button>
+        <button class="dtb" id="dtSnap" onclick="toggleSatSnap()" style="display:none" title="Cliquer sur le toit pour aligner ce sommet">🎯 Aligner</button>
         <div class="map-sep" style="margin:0 2px"></div>
-        <button class="dtb" onclick="alignerAxeDominant()" title="Aligne tous les pans sur l'orientation dominante du b√¢timent">‚äû Axe</button>
-        <button class="dtb" id="dtMerge" onclick="mergeSelectedPans()" title="Fusionner les pans s√©lectionn√©s en un seul polygone">‚äï Fusionner</button>
+        <button class="dtb" onclick="alignerAxeDominant()" title="Aligne tous les pans sur l'orientation dominante du bâtiment">⊞ Axe</button>
+        <button class="dtb" id="dtMerge" onclick="mergeSelectedPans()" title="Fusionner les pans sélectionnés en un seul polygone">⊕ Fusionner</button>
         <div class="map-sep" style="margin:0 2px"></div>
-        <button class="dtb" id="btnUndo" onclick="undo()" title="Annuler (Ctrl+Z)" style="opacity:.4" disabled>‚Üê Annuler</button>
-        <button class="dtb" id="btnRedo" onclick="redo()" title="R√©tablir (Ctrl+Y)" style="opacity:.4" disabled>‚Üí R√©tablir</button>
+        <button class="dtb" id="btnUndo" onclick="undo()" title="Annuler (Ctrl+Z)" style="opacity:.4" disabled>← Annuler</button>
+        <button class="dtb" id="btnRedo" onclick="redo()" title="Rétablir (Ctrl+Y)" style="opacity:.4" disabled>→ Rétablir</button>
         <span class="dbadge" id="dbadge">Vue</span>
       </div>
       <div class="mhintbar" id="mhint"></div>
       <div class="mact-bar" id="mactBar">
         <span style="font-size:10px;color:var(--muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="maddr"></span>
-        <button class="mbtn" id="btnAerial" onclick="toggleAerial()" title="Orthophoto officielle belge IGN 25cm ‚Äî bien plus nette que Google Maps" style="font-weight:700">üáßüá™ Photo BE</button>
-        <button class="mbtn" id="btnAI" onclick="analyserIA()" title="Analyse IA : Claude d√©tecte automatiquement les pans, pentes et azimuts" style="background:#6B5BE2;color:#fff;border-color:#6B5BE2;font-weight:700">ü§ñ IA</button>
-        <button class="mbtn" id="btnEdges" onclick="detectEdges()" title="D√©tection d'ar√™tes OpenCV sur orthophoto IGN ‚Äî affiche les fa√Ætages, goutti√®res, noues" style="background:#E67E22;color:#fff;border-color:#E67E22;font-weight:700">üîç Ar√™tes</button>
-        <button class="mbtn" id="btnRefine" onclick="refineFootprint()" title="Claude affine le polygone cadastral OSM pour le caler √† 100% sur la toiture visible" style="background:#16A085;color:#fff;border-color:#16A085;font-weight:700">üéØ Affiner cadastre</button>
+        <button class="mbtn" id="btnAerial" onclick="toggleAerial()" title="Orthophoto officielle belge IGN 25cm — bien plus nette que Google Maps" style="font-weight:700">🇧🇪 Photo BE</button>
+        <button class="mbtn" id="btnAI" onclick="analyserIA()" title="Analyse IA : Claude détecte automatiquement les pans, pentes et azimuts" style="background:#6B5BE2;color:#fff;border-color:#6B5BE2;font-weight:700">🤖 IA</button>
+        <button class="mbtn" id="btnEdges" onclick="detectEdges()" title="Détection d'arêtes OpenCV sur orthophoto IGN — affiche les faîtages, gouttières, noues" style="background:#E67E22;color:#fff;border-color:#E67E22;font-weight:700">🔍 Arêtes</button>
+        <button class="mbtn" id="btnRefine" onclick="refineFootprint()" title="Claude affine le polygone cadastral OSM pour le caler à 100% sur la toiture visible" style="background:#16A085;color:#fff;border-color:#16A085;font-weight:700">🎯 Affiner cadastre</button>
         <div class="map-sep"></div>
-        <button class="mbtn" onclick="openEarth()">üåç</button>
-        <button class="mbtn" onclick="resetView()">‚äô</button>
+        <button class="mbtn" onclick="openEarth()">🌍</button>
+        <button class="mbtn" onclick="resetView()">⊙</button>
       </div>
       <div class="hdgbar" id="hdgbar">
         <span style="font-size:10px;color:rgba(255,255,255,.6)">Rotation</span>
-        <button class="hdgbtn" onclick="rotM(-45)">‚Ü∫</button>
-        <button class="hdgbtn" onclick="rotM(45)">‚Üª</button>
+        <button class="hdgbtn" onclick="rotM(-45)">↺</button>
+        <button class="hdgbtn" onclick="rotM(45)">↻</button>
         <button class="hdgbtn" onclick="setHdg(0)">N</button>
         <button class="hdgbtn" onclick="setHdg(90)">E</button>
         <button class="hdgbtn" onclick="setHdg(180)">S</button>
@@ -272,12 +272,12 @@ tbody tr:last-child td{border-bottom:none}
         <div id="view3d">
           <canvas id="threeCanvas"></canvas>
           <div class="three-controls">
-            <button class="mbtn" onclick="resetThreeCam()" style="font-size:10px;padding:3px 8px">‚äô Reset</button>
-            <button class="mbtn" onclick="toggleStandalone3D()" style="font-size:10px;padding:3px 8px">‚úï Fermer</button>
+            <button class="mbtn" onclick="resetThreeCam()" style="font-size:10px;padding:3px 8px">⊙ Reset</button>
+            <button class="mbtn" onclick="toggleStandalone3D()" style="font-size:10px;padding:3px 8px">✕ Fermer</button>
           </div>
-          <div class="three-note">Orbite: clic-glisser ¬∑ Zoom: molette ¬∑ Cliquer un pan: s√©lectionner</div>
+          <div class="three-note">Orbite: clic-glisser · Zoom: molette · Cliquer un pan: sélectionner</div>
         </div>
-        <div class="prism-badge" id="prismBadge">‚ñ≤ Prismes 3D actifs</div>
+        <div class="prism-badge" id="prismBadge">▲ Prismes 3D actifs</div>
         <div class="lidar-badge" id="lidarBadge"></div>
       </div>
     </div>
@@ -286,7 +286,7 @@ tbody tr:last-child td{border-bottom:none}
     <div class="rpanel">
       <div class="rptop">
         <span class="rptitle" id="rptitle">Pans de toiture</span>
-        <span class="rphint" id="rphint">Cliquez pour s√©lectionner</span>
+        <span class="rphint" id="rphint">Cliquez pour sélectionner</span>
       </div>
       <div class="rpbody" id="rpbody"></div>
     </div>
@@ -294,28 +294,28 @@ tbody tr:last-child td{border-bottom:none}
 
   <div class="totbar">
     <div>
-      <div class="tlbl">Surface ITE s√©lectionn√©e</div>
-      <div><span class="tv" id="totval">0</span><span class="tu">m¬≤</span></div>
+      <div class="tlbl">Surface ITE sélectionnée</div>
+      <div><span class="tv" id="totval">0</span><span class="tu">m²</span></div>
       <div class="tsub" id="totsub"></div>
     </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-      <button class="slnk" onclick="selAll()">Tout s√©lectionner</button>
-      <button class="slnk" onclick="deselAll()">Tout d√©s√©lectionner</button>
-      <button id="btnFacade" onclick="toggleFacadePanel()" style="background:#1A3A5C;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer;display:none">üè† Fa√ßades</button>
+      <button class="slnk" onclick="selAll()">Tout sélectionner</button>
+      <button class="slnk" onclick="deselAll()">Tout désélectionner</button>
+      <button id="btnFacade" onclick="toggleFacadePanel()" style="background:#1A3A5C;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer;display:none">🏠 Façades</button>
     </div>
   </div>
 
 
-  <!-- FA√áADES PANEL -->
+  <!-- FAÇADES PANEL -->
   <div class="facade-card" id="facadeCard" style="display:none">
     <div class="facade-header">
       <div>
-        <div class="facade-title">üè† Fa√ßades ‚Äî Surface ITE murs</div>
-        <div style="font-size:10px;color:rgba(255,255,255,.6);margin-top:2px" id="facadeSrc">Contour b√¢timent GRB/Cadastre</div>
+        <div class="facade-title">🏠 Façades — Surface ITE murs</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.6);margin-top:2px" id="facadeSrc">Contour bâtiment GRB/Cadastre</div>
       </div>
       <div style="text-align:right">
-        <div class="facade-kpi" id="facadeTot">‚Äî</div>
-        <div class="facade-kpi-lbl">m¬≤ net fa√ßades</div>
+        <div class="facade-kpi" id="facadeTot">—</div>
+        <div class="facade-kpi-lbl">m² net façades</div>
       </div>
     </div>
     <div class="facade-hint" id="facadeHint"></div>
@@ -323,12 +323,12 @@ tbody tr:last-child td{border-bottom:none}
       <table class="wall-table" id="wallTable">
         <thead><tr>
           <th></th><th>Mur</th><th>Long.</th>
-          <th>Haut. (m)</th><th>Brut m¬≤</th><th>Ouvert. m¬≤</th><th>Net m¬≤</th>
+          <th>Haut. (m)</th><th>Brut m²</th><th>Ouvert. m²</th><th>Net m²</th>
         </tr></thead>
         <tbody id="wallTbody"></tbody>
       </table>
     </div>
-    <div class="facade-note">Hauteur = goutti√®re basse ¬∑ Cliquer un mur pour le surligner ¬∑ Ouvertures = fen√™tres + portes √† d√©duire</div>
+    <div class="facade-note">Hauteur = gouttière basse · Cliquer un mur pour le surligner · Ouvertures = fenêtres + portes à déduire</div>
   </div>
 
   <div class="tblcard">
@@ -346,16 +346,16 @@ tbody tr:last-child td{border-bottom:none}
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
       Copier pour devis
     </button>
-    <button class="bpdf" onclick="generatePDFReport()">üìÑ Rapport PDF</button>
-    <button class="bpdf" onclick="toggleScaffolding()">üèó √âchafaudage</button>
-    <span id="copied" style="font-size:11px;color:var(--g);font-weight:500;display:none">‚úì Copi√©</span>
+    <button class="bpdf" onclick="generatePDFReport()">📄 Rapport PDF</button>
+    <button class="bpdf" onclick="toggleScaffolding()">🏗 Échafaudage</button>
+    <span id="copied" style="font-size:11px;color:var(--g);font-weight:500;display:none">✓ Copié</span>
   </div>
 
-  <!-- √âchafaudage panel -->
+  <!-- Échafaudage panel -->
   <div id="scaffPanel" style="display:none;background:var(--card);border-radius:10px;border:1px solid var(--bdr);padding:1rem;margin-bottom:10px">
-    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px">üèó Estimation √âchafaudage ITE</div>
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px">🏗 Estimation Échafaudage ITE</div>
     <div id="scaffContent"></div>
-    <div style="font-size:10px;color:var(--muted);margin-top:6px">Estimation indicative ¬∑ base = p√©rim√®tre √ó hauteur goutti√®re ¬∑ +15% joints/angles</div>
+    <div style="font-size:10px;color:var(--muted);margin-top:6px">Estimation indicative · base = périmètre × hauteur gouttière · +15% joints/angles</div>
   </div>
 
   <div class="note" id="noteEl"></div>
@@ -364,51 +364,51 @@ tbody tr:last-child td{border-bottom:none}
 <div class="toast" id="toast"></div>
 
 <script>
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 // CONFIG
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 const API_KEY = 'AIzaSyBBQncnc-j-F4QE-HFsO18nawjPnPyo5vA';
 const MAP_ID  = '986c697e2ebf204c782b2d6d';
-// Backend WeCover (FastAPI on Render) ‚Äî proxy cadastre + Claude IA
+// Backend WeCover (FastAPI on Render) — proxy cadastre + Claude IA
 const BACKEND_URL = 'https://wecover-api.onrender.com';
-// ‚îÄ‚îÄ Cl√© API Anthropic (console.anthropic.com) ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
-// Obtenez votre cl√© sur https://console.anthropic.com/settings/keys
+// ── Clé API Anthropic (console.anthropic.com) ──────────────────────────
+// Obtenez votre clé sur https://console.anthropic.com/settings/keys
 const COLORS  = ['#6B5BE2','#E5734B','#27AE78','#9B4BE5','#C9A800','#E5386B','#00ACC1','#D35400','#4B7BE5','#58A83E'];
 const DIRS    = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSO','SO','OSO','O','ONO','NO','NNO'];
 const DCLR    = {S:'#1565C0',SSE:'#1565C0',SE:'#0EA5E9',SSO:'#1565C0',SO:'#0EA5E9',N:'#B45309',NNE:'#B45309',NNO:'#B45309',E:'#9B2C6A',ENE:'#9B2C6A',ESE:'#9B2C6A',NE:'#9B2C6A',O:'#5B3FBE',ONO:'#5B3FBE',OSO:'#5B3FBE',NO:'#5B3FBE'};
 const WALL_H  = 6;   // metres, height of building walls below eave
 const EAVE_H  = 6;   // metres altitude at eave (approximate)
 
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 // STATE
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 let segs=[], selId=null, appMode='analyse', detId=null, desView='pans'; // desView: 'pans'|'detail'
 let mapInst=null, drawMgr=null, editMode=false, azEdgeMode=false;
 let cLat=0, cLng=0, cLabel='', cRegion='unknown', cBaseAlt=0;
-let cBuildingFootprint=null;  // closest building polygon from PICC/GRB ‚Äî used as AI constraint
+let cBuildingFootprint=null;  // closest building polygon from PICC/GRB — used as AI constraint
 let lidarPolys=[];  // visual cadastre overlays
 let solarRects=[], colorIdx=0;
 // WebGL overlay (3D prisms on map)
 // Standalone Three.js
 let tScene=null, tCam=null, tRend=null, tCtrl=null, tMeshes=[], tAF=null, show3D=false;
 
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 // UTILS
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 const azDir = az => DIRS[Math.round(((az%360)+360)%360/22.5)%16];
-const ptLbl = p  => p<3?'Plat':p<18?'Faible':p<33?'Mod√©r√©':'Pentu';
+const ptLbl = p  => p<3?'Plat':p<18?'Faible':p<33?'Modéré':'Pentu';
 const nxtClr= ()  => COLORS[(colorIdx++)%COLORS.length];
 const esc   = s  => String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const d2r   = d  => d*Math.PI/180;
 const r2d   = r  => r*180/Math.PI;
 
 function bCls(dir){if(['S','SSE','SE','SSO','SO'].includes(dir))return'bs';if(['N','NNE','NNO'].includes(dir))return'bn';if(['E','ENE','ESE','NE'].includes(dir))return'be';if(['O','ONO','OSO','NO'].includes(dir))return'bo';return'bx';}
-function sunStr(q){if(!q||!q.length)return'‚Äî';const m=q[Math.floor(q.length/2)];return(m>1000?'‚òÖ‚òÖ‚òÖ ':m>800?'‚òÖ‚òÖ ':'‚òÖ ')+m.toFixed(0)+'h/an';}
+function sunStr(q){if(!q||!q.length)return'—';const m=q[Math.floor(q.length/2)];return(m>1000?'★★★ ':m>800?'★★ ':'★ ')+m.toFixed(0)+'h/an';}
 function sunClr(q){if(!q||!q.length)return'var(--muted)';const m=q[Math.floor(q.length/2)];return m>1000?'var(--g)':m>800?'var(--amber)':'var(--red)';}
 
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
-// AREA ‚Äî surface inclin√©e ITE
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
+// AREA — surface inclinée ITE
+// ════════════════════════════════════════════
 function getArea(seg){
   const pr = d2r(seg.pitch);
   if(seg.source==='manual' && seg.drawnArea!==undefined)
@@ -419,9 +419,9 @@ function getArea(seg){
 }
 function refreshArea(seg){ seg.area = parseFloat(getArea(seg).toFixed(2)); }
 
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 // APP MODE
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 function setMode(m){
   appMode=m;
   document.getElementById('mA').classList.toggle('on',m==='analyse');
@@ -435,9 +435,9 @@ function updateMapUI(){
   if(appMode==='analyse'&&drawMgr){drawMgr.setDrawingMode(null);setDMode('view');}
 }
 
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 // SEARCH
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 async function doSearch(){
   const raw = document.getElementById('addr').value.trim();
   if(!raw) return;
@@ -446,7 +446,7 @@ async function doSearch(){
   const cm = raw.match(/^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/);
 
   if(cm){
-    // Coordinates entered directly ‚Äî skip geocoding entirely
+    // Coordinates entered directly — skip geocoding entirely
     await _startWithLocation(+cm[1], +cm[2], cm[1]+', '+cm[2], 'unknown');
     setSL(false);
   } else {
@@ -454,7 +454,7 @@ async function doSearch(){
     loadMapsAPI(()=>{
       const geocoder = new google.maps.Geocoder();
       geocoder.geocode({address:raw, region:'BE'}, async(results,status)=>{
-        if(status==='REQUEST_DENIED'){showErr('Geocoding API refus√©e ‚Äî v√©rifiez Google Cloud.');setSL(false);return;}
+        if(status==='REQUEST_DENIED'){showErr('Geocoding API refusée — vérifiez Google Cloud.');setSL(false);return;}
         if(status!=='OK'||!results.length){showErr('Adresse introuvable ('+status+').');setSL(false);return;}
         const loc = results[0].geometry.location;
         const ac  = results[0].address_components||[];
@@ -480,7 +480,7 @@ async function _startWithLocation(lat, lng, label, region){
   
   document.getElementById('maddr').textContent=label;
   document.getElementById('res').style.display='block';
-  document.getElementById('mSrc').textContent='‚Ä¶';
+  document.getElementById('mSrc').textContent='…';
   if(show3D) closeStandalone3D();
 
   // Fetch ground elevation using Maps JS ElevationService (no CORS issues)
@@ -509,16 +509,16 @@ async function _startWithLocation(lat, lng, label, region){
   });
 }
 
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 // MAPS API
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 function loadMapsAPI(cb){
   if(window.google&&window.google.maps){cb();return;}
   window._gmc=cb;
   const s=document.createElement('script');
   s.src='https://maps.googleapis.com/maps/api/js?key='+API_KEY+'&libraries=drawing,geometry&callback=_gmc&v=weekly';
   s.async=true;s.defer=true;
-  s.onerror=()=>showErr('Maps API indisponible depuis un fichier local sur Safari/iOS. Solution rapide : saisissez les coordonn√©es GPS directement (ex: 50.8318, 4.3971). Solution d√©finitive : h√©bergez le fichier en ligne (GitHub Pages, localhost‚Ä¶).');
+  s.onerror=()=>showErr('Maps API indisponible depuis un fichier local sur Safari/iOS. Solution rapide : saisissez les coordonnées GPS directement (ex: 50.8318, 4.3971). Solution définitive : hébergez le fichier en ligne (GitHub Pages, localhost…).');
   document.head.appendChild(s);
 }
 
@@ -562,14 +562,14 @@ function onKey(e){
   }
 }
 
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 // SOLAR API
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 function buildFromSolar(sol){
   const ss = sol?.solarPotential?.roofSegmentStats||[];
   const d  = sol?.imageryDate;
   const totA = sol?.solarPotential?.wholeRoofStats?.areaMeters2;
-  document.getElementById('mSrc').textContent = ss.length>0 ? 'Solar API'+(d?' ('+d.month+'/'+d.year+')':'') : 'Aucune donn√©e Solar';
+  document.getElementById('mSrc').textContent = ss.length>0 ? 'Solar API'+(d?' ('+d.month+'/'+d.year+')':'') : 'Aucune donnée Solar';
 
   ss.forEach((s,i)=>{
     const pitch  = +(s.pitchDegrees||0).toFixed(1);
@@ -598,47 +598,16 @@ function buildFromSolar(sol){
   }
 }
 
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 // LIDAR
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
-function normalizeCadastreResponse(j){
-  const features = j?.data?.features || j?.features;
-  if(features?.length){
-    return {
-      type: j.type || j.data?.type || 'osm',
-      data: {type:'FeatureCollection', features}
-    };
-  }
-  if(j?.buildings?.length){
-    return {
-      type: j.type || 'osm',
-      data: {
-        type: 'FeatureCollection',
-        features: j.buildings
-          .filter(b=>b.coords?.length>=3)
-          .map(b=>({
-            type: 'Feature',
-            id: b.id,
-            geometry: {
-              type: 'Polygon',
-              coordinates: [b.coords.map(p=>[p.lng,p.lat])]
-            },
-            properties: {}
-          }))
-      }
-    };
-  }
-  return null;
-}
-
+// ════════════════════════════════════════════
 async function fetchLidar(lat,lng,region){
-  // Use WeCover backend proxy ‚Üí OSM Overpass (couvre toute la Belgique, sans CORS)
+  // Use WeCover backend proxy → OSM Overpass (couvre toute la Belgique, sans CORS)
   try{
-    const safeRegion = region && region !== 'unknown' ? region : 'auto';
-    const r=await fetch(`${BACKEND_URL}/api/cadastre?lat=${lat}&lng=${lng}&region=${safeRegion}`);
+    const r=await fetch(`${BACKEND_URL}/api/cadastre?lat=${lat}&lng=${lng}&region=${region||'auto'}`);
     if(!r.ok) return null;
     const j=await r.json();
-    return normalizeCadastreResponse(j);
+    if(j.data?.features?.length>0) return{type:j.type||'osm',data:j.data};
   }catch(e){console.log('Cadastre:',e.message);}
   return null;
 }
@@ -667,7 +636,7 @@ function findClosestBuilding(lidar){
 function overlayLidar(lidar){
   if(!mapInst||!lidar?.data?.features?.length) return;
 
-  // Find closest building ‚Üí use as AI constraint and highlight visually
+  // Find closest building → use as AI constraint and highlight visually
   cBuildingFootprint = findClosestBuilding(lidar);
 
   lidar.data.features.forEach(f=>{
@@ -675,7 +644,7 @@ function overlayLidar(lidar){
     const rings = f.geometry.type==='Polygon'?f.geometry.coordinates:[f.geometry.coordinates[0]];
     rings.forEach(ring=>{
       if(!ring||ring.length<3) return;
-      // Check if this ring is the "closest building" ‚Üí highlight differently
+      // Check if this ring is the "closest building" → highlight differently
       const isMain = cBuildingFootprint &&
         Math.abs(ring[0][0]-cBuildingFootprint[0].lng)<1e-6 &&
         Math.abs(ring[0][1]-cBuildingFootprint[0].lat)<1e-6;
@@ -692,18 +661,18 @@ function overlayLidar(lidar){
     });
   });
   const badge=document.getElementById('lidarBadge');
-  const lbl = lidar.type==='grb' ? 'GRB Flandre' : (lidar.type==='wallon-picc' ? 'PICC Wallonie ¬∑ b√¢t. principal' : 'Cadastre');
+  const lbl = lidar.type==='grb' ? 'GRB Flandre' : (lidar.type==='wallon-picc' ? 'PICC Wallonie · bât. principal' : 'Cadastre');
   badge.textContent=lbl;
   badge.classList.add('vis');
-  document.getElementById('mSrc').textContent+=' + B√¢ti';
+  document.getElementById('mSrc').textContent+=' + Bâti';
   if(cBuildingFootprint){
     console.log('Building footprint detected:', cBuildingFootprint.length, 'vertices');
   }
 }
 
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 // MAP OVERLAYS (2D rectangles/polygons)
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 let _drawSegDepth=0;
 function drawSeg(seg){
   if(_drawSegDepth>1) return;
@@ -763,18 +732,18 @@ function drawSeg(seg){
       seg.center = center;
     }
 
-    // Create/update label (m¬≤ badge)
+    // Create/update label (m² badge)
     if(center){
       const pos = {lat:center.latitude, lng:center.longitude};
       const area = getArea(seg).toFixed(1);
-      const labelHtml = `<div style="background:${seg.color};color:#fff;font-weight:700;font-size:11px;padding:2px 6px;border-radius:10px;border:1.5px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4);white-space:nowrap">${seg.name} ¬∑ ${area}m¬≤</div>`;
+      const labelHtml = `<div style="background:${seg.color};color:#fff;font-weight:700;font-size:11px;padding:2px 6px;border-radius:10px;border:1.5px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4);white-space:nowrap">${seg.name} · ${area}m²</div>`;
       if(seg.label){
         seg.label.setPosition(pos);
-        if(seg.label.setLabel) seg.label.setLabel(seg.name+' '+area+'m¬≤');
+        if(seg.label.setLabel) seg.label.setLabel(seg.name+' '+area+'m²');
       } else {
         seg.label = new google.maps.Marker({
           position:pos, map:mapInst,
-          label:{text:seg.name+' '+area+'m¬≤', color:'#fff', fontSize:'10px', fontWeight:'700'},
+          label:{text:seg.name+' '+area+'m²', color:'#fff', fontSize:'10px', fontWeight:'700'},
           icon:{path:'M -1,-1 1,-1 1,1 -1,1 z', fillColor:seg.color, fillOpacity:.95, strokeColor:'#fff', strokeWeight:1.5, scale:14},
           clickable:false, zIndex:20,
         });
@@ -800,11 +769,11 @@ function clickSeg(id){
   if(show3D) buildTMeshes();
 }
 
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 // PRISM GEOMETRY (shared by WebGL overlay + Three.js)
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 // Returns {verts:Float32Array[24], idx:Uint16Array[36]}
-// Prism: 8 vertices √ó 6 faces (top inclined + bottom + 4 walls)
+// Prism: 8 vertices × 6 faces (top inclined + bottom + 4 walls)
 function makePrismGeom(cx, cz, w, d, pitchRad, azRad, eaveAlt){
   const dax=Math.sin(azRad), daz=-Math.cos(azRad); // downslope horizontal direction
   const rx =Math.cos(azRad), rz= Math.sin(azRad); // ridge direction (perpendicular)
@@ -836,9 +805,9 @@ function makePrismGeom(cx, cz, w, d, pitchRad, azRad, eaveAlt){
   return {v,i};
 }
 
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 // WEBGL OVERLAY (3D prisms on satellite map)
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 // Shared helper: get actual lat/lng vertices of a segment's map shape
 function getFootprint(seg){
   if(seg.polygon && seg.polygon.getPath){
@@ -858,10 +827,10 @@ function getFootprint(seg){
   return[];
 }
 
-// ‚îÄ‚îÄ Debounced GL rebuild for smooth real-time slider updates ‚îÄ‚îÄ
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ── Debounced GL rebuild for smooth real-time slider updates ──
+// ════════════════════════════════════════════
 // TERRAIN ALIGNMENT (Google Elevation API)
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 async function alignToTerrain(segId){
   const seg=segs.find(s=>s.id===segId); if(!seg)return;
   const fp=getFootprint(seg);
@@ -872,7 +841,7 @@ async function alignToTerrain(segId){
   const pts=[...fp, center];
   const locs=pts.map(v=>v.lat.toFixed(6)+','+v.lng.toFixed(6)).join('|');
 
-  toast('Interrogation Elevation API‚Ä¶');
+  toast('Interrogation Elevation API…');
   try{
     if(!window.google?.maps?.ElevationService) throw new Error('ElevationService non disponible');
     const locations=pts.map(v=>({lat:v.lat,lng:v.lng}));
@@ -890,7 +859,7 @@ async function alignToTerrain(segId){
 
     // Show min/max terrain for info
     const maxE=Math.max(...elevs);
-    toast('Terrain align√© ‚úì ‚Äî relief '+( maxE-seg.baseElevation ).toFixed(1)+' m sur ce pan');
+    toast('Terrain aligné ✓ — relief '+( maxE-seg.baseElevation ).toFixed(1)+' m sur ce pan');
     if(show3D) buildTMeshes();
     renderRightPanel();
   }catch(e){ toast('Erreur Elevation API : '+e.message); }
@@ -900,16 +869,16 @@ function resetTerrain(segId){
   const seg=segs.find(s=>s.id===segId); if(!seg)return;
   seg.terrainData=null; seg.terrainEnabled=false; seg.baseElevation=null; if(show3D) buildTMeshes();
   renderRightPanel();
-  toast('Terrain r√©initialis√©');
+  toast('Terrain réinitialisé');
 }
 
 function resetView(){if(!mapInst)return;mapInst.setCenter({lat:cLat,lng:cLng});mapInst.setZoom(21);mapInst.setHeading(0);}
 
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
-// ORTHOPHOTO BELGE ‚Äî IGN/NGI 25cm
-// G√©oportail Wallon (Wallonie) + Geopunt (Flandre/Bruxelles)
-// M√™me source que les "scans rapides" d'airoCollect & outils pro
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
+// ORTHOPHOTO BELGE — IGN/NGI 25cm
+// Géoportail Wallon (Wallonie) + Geopunt (Flandre/Bruxelles)
+// Même source que les "scans rapides" d'airoCollect & outils pro
+// ════════════════════════════════════════════
 let _aerialOn=false, _aerialOverlay=null;
 
 function toggleAerial(){
@@ -917,7 +886,7 @@ function toggleAerial(){
   _aerialOn=!_aerialOn;
   const btn=document.getElementById('btnAerial');
   btn.classList.toggle('on',_aerialOn);
-  btn.textContent=_aerialOn?'üáßüá™ Photo BE ‚úì':'üáßüá™ Photo BE';
+  btn.textContent=_aerialOn?'🇧🇪 Photo BE ✓':'🇧🇪 Photo BE';
 
   if(_aerialOn){
     _applyAerialLayer();
@@ -926,7 +895,7 @@ function toggleAerial(){
       mapInst.overlayMapTypes.removeAt(_aerialOverlay);
       _aerialOverlay=null;
     }
-    toast('Retour √† Google Maps satellite');
+    toast('Retour à Google Maps satellite');
   }
 }
 
@@ -938,7 +907,7 @@ function _applyAerialLayer(){
   let tileLayer;
 
   if(cRegion==='wallonia'){
-    // ‚îÄ‚îÄ G√©oportail Wallon ‚Äî Orthophoto 2021 (25cm) ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+    // ── Géoportail Wallon — Orthophoto 2021 (25cm) ──────────────────
     // WMS GetMap, CRS=EPSG:4326
     tileLayer = new google.maps.ImageMapType({
       name:'Orthophoto Wallonie IGN',
@@ -955,10 +924,10 @@ function _applyAerialLayer(){
           '&WIDTH=256&HEIGHT=256';
       },
     });
-    toast('üáßüá™ Orthophoto Wallonie IGN 2021 ¬∑ 25cm/pixel');
+    toast('🇧🇪 Orthophoto Wallonie IGN 2021 · 25cm/pixel');
 
   }else if(cRegion==='flanders'||cRegion==='brussels'){
-    // ‚îÄ‚îÄ Geopunt Vlaanderen ‚Äî Orthophoto (25cm) WMTS compatible Google tiles ‚îÄ‚îÄ
+    // ── Geopunt Vlaanderen — Orthophoto (25cm) WMTS compatible Google tiles ──
     tileLayer = new google.maps.ImageMapType({
       name:'Orthophoto Vlaanderen',
       tileSize: new google.maps.Size(256,256),
@@ -972,16 +941,16 @@ function _applyAerialLayer(){
           '&FORMAT=image%2Fjpeg';
       },
     });
-    toast('üáßüá™ Orthophoto Vlaanderen 2022 ¬∑ 25cm/pixel');
+    toast('🇧🇪 Orthophoto Vlaanderen 2022 · 25cm/pixel');
 
   }else{
-    // Unknown region ‚Äî try Wallonia first, then Flanders
+    // Unknown region — try Wallonia first, then Flanders
     // Use a simple check based on coordinates
     if(cLat<50.5||cLng<4.0||cLng>6.0){
-      toast('R√©gion non d√©tect√©e ‚Äî orthophoto non disponible pour cette zone. Essayez avec lat,lng.');
+      toast('Région non détectée — orthophoto non disponible pour cette zone. Essayez avec lat,lng.');
       _aerialOn=false;
       document.getElementById('btnAerial').classList.remove('on');
-      document.getElementById('btnAerial').textContent='üáßüá™ Photo BE';
+      document.getElementById('btnAerial').textContent='🇧🇪 Photo BE';
       return;
     }
     // Default to Wallonia for central Belgium
@@ -997,7 +966,7 @@ function _applyAerialLayer(){
           '&CRS=EPSG%3A4326&BBOX='+s+','+w+','+n+','+e+'&WIDTH=256&HEIGHT=256';
       },
     });
-    toast('üáßüá™ Orthophoto belge ‚Äî d√©tection r√©gion incertaine');
+    toast('🇧🇪 Orthophoto belge — détection région incertaine');
   }
 
   // Overlay on top of Google satellite
@@ -1008,24 +977,24 @@ function _applyAerialLayer(){
   if(mapInst.getZoom()<20) mapInst.setZoom(21);
 }
 
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
-// ANALYSE IA ‚Äî Claude Vision pour d√©tection automatique des pans
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
+// ANALYSE IA — Claude Vision pour détection automatique des pans
+// ════════════════════════════════════════════
 
 async function analyserIA(){
   if(!cLat||!cLng){toast('Chargez une adresse d\'abord');return;}
 
   const btn=document.getElementById('btnAI');
   const orig=btn.innerHTML;
-  btn.innerHTML='<span class="spin"></span> IA‚Ä¶';btn.disabled=true;
+  btn.innerHTML='<span class="spin"></span> IA…';btn.disabled=true;
 
   try{
-    // ‚îÄ‚îÄ 1. Capture satellite image (best effort) ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+    // ── 1. Capture satellite image (best effort) ──────────────────────
     const zoom=Math.min(mapInst?.getZoom()||21,21);
     const W=640,H=640;
     let imgBase64=null;
 
-    toast('ü§ñ Capture image satellite‚Ä¶');
+    toast('🤖 Capture image satellite…');
     imgBase64=await new Promise(res=>{
       const img=new Image();img.crossOrigin='anonymous';
       img.onload=()=>{
@@ -1040,13 +1009,12 @@ async function analyserIA(){
       setTimeout(()=>res(null),8000);
     });
 
-    toast(imgBase64?'ü§ñ Envoi √† Claude‚Ä¶':'ü§ñ Analyse GPS + Solar API‚Ä¶');
+    toast(imgBase64?'🤖 Envoi à Claude…':'🤖 Analyse GPS + Solar API…');
 
-    // ‚îÄ‚îÄ 2. Call WeCover backend (cl√© Anthropic c√¥t√© serveur) ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
-    const safeRegion = cRegion && cRegion !== 'unknown' ? cRegion : 'auto';
+    // ── 2. Call WeCover backend (clé Anthropic côté serveur) ──────────
     const payload={
       lat:cLat, lng:cLng,
-      label:cLabel||'', region:safeRegion,
+      label:cLabel||'', region:cRegion||'wallonia',
       image_base64:imgBase64,
       solar_segments:segs.map(s=>({pitch:s.pitch,azimuth:s.azimuth,area:getArea(s)})),
       building_footprint:cBuildingFootprint||null,
@@ -1064,13 +1032,13 @@ async function analyserIA(){
     }
     const result=await resp.json();
 
-    // ‚îÄ‚îÄ 3. Create segments from AI result ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+    // ── 3. Create segments from AI result ─────────────────────────────
     const coordMode = result._coord_mode || (imgBase64 ? 'pixels' : 'meters');
-    _applyAIResult(result,coordMode,zoom,W,H,!!(imgBase64||result._has_image));
+    _applyAIResult(result,coordMode,zoom,W,H,!!imgBase64);
 
   }catch(e){
     console.error('IA error:',e);
-    toast('‚ùå Erreur IA : '+e.message.slice(0,120));
+    toast('❌ Erreur IA : '+e.message.slice(0,120));
   }finally{
     btn.innerHTML=orig;btn.disabled=false;
   }
@@ -1082,7 +1050,7 @@ async function detectEdges(){
   if(!cLat||!cLng){toast('Chargez une adresse d\'abord');return;}
   const btn=document.getElementById('btnEdges');
   const orig=btn.innerHTML;
-  btn.innerHTML='<span class="spin"></span> D√©tection‚Ä¶';btn.disabled=true;
+  btn.innerHTML='<span class="spin"></span> Détection…';btn.disabled=true;
 
   try{
     // Clear previous
@@ -1091,7 +1059,7 @@ async function detectEdges(){
     _edgePolylines=[]; _panelPolylines=[];
     _detectedEdges=[]; _detectedPanels=[];
 
-    toast('üîç T√©l√©chargement orthophoto + Canny+Hough‚Ä¶');
+    toast('🔍 Téléchargement orthophoto + Canny+Hough…');
     const zoom=Math.min(mapInst?.getZoom()||21,21);
 
     const resp=await fetch(`${BACKEND_URL}/api/detect-edges`,{
@@ -1101,7 +1069,7 @@ async function detectEdges(){
         lat:cLat, lng:cLng, zoom,
         source: 'auto',
         min_length_m: 1.0,
-        building_footprint: cBuildingFootprint || null,  // ‚Üê filtre les lignes au b√¢timent
+        building_footprint: cBuildingFootprint || null,  // ← filtre les lignes au bâtiment
       }),
     });
     if(!resp.ok){
@@ -1113,16 +1081,16 @@ async function detectEdges(){
     _detectedPanels=result.panels||[];
 
     if(!_detectedEdges.length && !_detectedPanels.length){
-      toast('üîç Aucune ar√™te d√©tect√©e ‚Äî image peut-√™tre trop floue');
+      toast('🔍 Aucune arête détectée — image peut-être trop floue');
       return;
     }
 
-    // Render kept edges (orange thick) ‚Äî main edges + lucarnes/chiens-assis
+    // Render kept edges (orange thick) — main edges + lucarnes/chiens-assis
     _detectedEdges.forEach((ln,i)=>{
       const isLong = ln.length_m >= 3;
       const line=new google.maps.Polyline({
         path:[{lat:ln.lat1,lng:ln.lng1},{lat:ln.lat2,lng:ln.lng2}],
-        strokeColor: isLong ? '#FF8C00' : '#FFB347',  // Long=orange fonc√©, court=orange clair (lucarnes)
+        strokeColor: isLong ? '#FF8C00' : '#FFB347',  // Long=orange foncé, court=orange clair (lucarnes)
         strokeOpacity:.9,
         strokeWeight: isLong ? 3 : 2,
         zIndex:3,
@@ -1133,12 +1101,12 @@ async function detectEdges(){
       line.addListener('mouseout',()=>line.setOptions({strokeColor: isLong?'#FF8C00':'#FFB347', strokeWeight: isLong?3:2, zIndex:3}));
       line.addListener('click',()=>{
         const type = isLong ? 'principale' : 'lucarne/chien-assis';
-        toast('Ar√™te '+(i+1)+' ¬∑ '+ln.length_m.toFixed(1)+'m ¬∑ '+ln.angle_deg.toFixed(0)+'¬∞ ¬∑ '+type);
+        toast('Arête '+(i+1)+' · '+ln.length_m.toFixed(1)+'m · '+ln.angle_deg.toFixed(0)+'° · '+type);
       });
       _edgePolylines.push(line);
     });
 
-    // Render solar panels hidden by default (cyan dotted) ‚Äî visible on demand via btnPanels
+    // Render solar panels hidden by default (cyan dotted) — visible on demand via btnPanels
     _detectedPanels.forEach((ln)=>{
       const line=new google.maps.Polyline({
         path:[{lat:ln.lat1,lng:ln.lng1},{lat:ln.lat2,lng:ln.lng2}],
@@ -1156,11 +1124,11 @@ async function detectEdges(){
     const nLong = _detectedEdges.filter(e=>e.length_m>=3).length;
     const nShort = _detectedEdges.length - nLong;
     const nPanels = _detectedPanels.length;
-    toast(`‚úì ${nLong} ar√™tes principales + ${nShort} lucarnes/chiens-assis ¬∑ ${nPanels} panneaux solaires ignor√©s ¬∑ ${result.source}`);
+    toast(`✓ ${nLong} arêtes principales + ${nShort} lucarnes/chiens-assis · ${nPanels} panneaux solaires ignorés · ${result.source}`);
 
   }catch(e){
     console.error('Edge detection error:',e);
-    toast('‚ùå Erreur d√©tection : '+e.message.slice(0,120));
+    toast('❌ Erreur détection : '+e.message.slice(0,120));
   }finally{
     btn.innerHTML=orig;btn.disabled=false;
   }
@@ -1169,7 +1137,7 @@ async function detectEdges(){
 function togglePanelsVisibility(){
   const anyVisible = _panelPolylines.some(p=>p.getMap()!==null);
   _panelPolylines.forEach(p=>p.setMap(anyVisible?null:mapInst));
-  toast(anyVisible?'Panneaux solaires masqu√©s':_panelPolylines.length+' panneaux solaires affich√©s (cyan)');
+  toast(anyVisible?'Panneaux solaires masqués':_panelPolylines.length+' panneaux solaires affichés (cyan)');
 }
 
 function clearEdges(){
@@ -1177,24 +1145,24 @@ function clearEdges(){
   _panelPolylines.forEach(p=>p.setMap(null));
   _edgePolylines=[]; _panelPolylines=[];
   _detectedEdges=[]; _detectedPanels=[];
-  toast('Ar√™tes masqu√©es');
+  toast('Arêtes masquées');
 }
 
-// ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
-// üéØ Affiner cadastre IA ‚Äî Claude raffine le polygone OSM √† 100%
-// ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+// ────────────────────────────────────────────────────
+// 🎯 Affiner cadastre IA — Claude raffine le polygone OSM à 100%
+// ────────────────────────────────────────────────────
 async function refineFootprint(){
   if(!cLat||!cLng){toast('Chargez une adresse d\'abord');return;}
   if(!cBuildingFootprint||cBuildingFootprint.length<3){
-    toast('‚ùå Pas de cadastre OSM √† affiner ‚Äî relancez Analyser');
+    toast('❌ Pas de cadastre OSM à affiner — relancez Analyser');
     return;
   }
   const btn=document.getElementById('btnRefine');
   const orig=btn.innerHTML;
-  btn.innerHTML='<span class="spin"></span> Affinage‚Ä¶';btn.disabled=true;
+  btn.innerHTML='<span class="spin"></span> Affinage…';btn.disabled=true;
 
   try{
-    toast('üéØ Claude analyse la toiture pour caler le cadastre‚Ä¶');
+    toast('🎯 Claude analyse la toiture pour caler le cadastre…');
 
     // Backend fetches image from Belgian WMS automatically if not provided
     const resp=await fetch(`${BACKEND_URL}/api/refine-footprint`,{
@@ -1215,15 +1183,15 @@ async function refineFootprint(){
     const result=await resp.json();
     const refined=result.refined_footprint||[];
     if(refined.length<3){
-      toast('‚ùå IA n\'a pas retourn√© un polygone valide');
+      toast('❌ IA n\'a pas retourné un polygone valide');
       return;
     }
 
-    // Affiche le polygone affin√© en vert par-dessus le cadastre OSM
+    // Affiche le polygone affiné en vert par-dessus le cadastre OSM
     if(window._refinedFootprintPoly){window._refinedFootprintPoly.setMap(null);}
     window._refinedFootprintPoly=new google.maps.Polygon({
       paths: refined,
-      strokeColor:'#16A085',    // vert affin√© (diff√©rent de l'orange OSM)
+      strokeColor:'#16A085',    // vert affiné (différent de l'orange OSM)
       strokeWeight:3,
       strokeOpacity:.95,
       fillColor:'#16A085',
@@ -1233,29 +1201,29 @@ async function refineFootprint(){
       map: mapInst,
     });
 
-    // Update globale ‚Üí future d√©tection d'ar√™tes utilisera ce footprint affin√©
+    // Update globale → future détection d'arêtes utilisera ce footprint affiné
     cBuildingFootprint = refined;
 
-    const conf=result.confidence ? ` ¬∑ conf ${(result.confidence*100|0)}%` : '';
-    toast(`‚úì Cadastre affin√© : ${result.original_count}‚Üí${refined.length} sommets${conf} ¬∑ ${result.notes||''}`.slice(0,180));
+    const conf=result.confidence ? ` · conf ${(result.confidence*100|0)}%` : '';
+    toast(`✓ Cadastre affiné : ${result.original_count}→${refined.length} sommets${conf} · ${result.notes||''}`.slice(0,180));
     console.log('Refined footprint:', result);
 
   }catch(e){
     console.error('Refine error:',e);
-    toast('‚ùå Affinage : '+e.message.slice(0,120));
+    toast('❌ Affinage : '+e.message.slice(0,120));
   }finally{
     btn.innerHTML=orig;btn.disabled=false;
   }
 }
 
 function _applyAIResult(result,coordMode,zoom,W,H,hasImg){
-  if(!result?.planes?.length){toast('IA : aucun pan identifi√© dans la r√©ponse');return;}
+  if(!result?.planes?.length){toast('IA : aucun pan identifié dans la réponse');return;}
   saveSnapshot();
 
   // Coordinate converters
   const latM=111320, lngM=111320*Math.cos(d2r(cLat));
 
-  // PIXEL ‚Üí lat/lng (Mercator)
+  // PIXEL → lat/lng (Mercator)
   const scale=256*Math.pow(2,zoom);
   const px2ll=(px,py)=>{
     const wx=(cLng+180)/360*scale+(px-W/2);
@@ -1265,10 +1233,10 @@ function _applyAIResult(result,coordMode,zoom,W,H,hasImg){
     return{lat:r2d(Math.atan(.5*(Math.exp(n)-Math.exp(-n)))),lng};
   };
 
-  // METER OFFSET ‚Üí lat/lng
+  // METER OFFSET → lat/lng
   const m2ll=(e_m,n_m)=>({lat:cLat+n_m/latM, lng:cLng+e_m/lngM});
 
-  // Clear ALL existing segments (recalibrerPans converts api‚Üímanual, so filter was useless)
+  // Clear ALL existing segments (recalibrerPans converts api→manual, so filter was useless)
   segs.forEach(s=>{if(s.overlay)s.overlay.setMap(null);if(s.label)s.label.setMap(null);});
   segs=[];
   colorIdx=0;
@@ -1286,7 +1254,7 @@ function _applyAIResult(result,coordMode,zoom,W,H,hasImg){
       path=plane.polygon.map(([px,py])=>px2ll(px,py));
     }
 
-    if(path.length<3){console.warn('Pan '+i+' : coordonn√©es invalides',plane);return;}
+    if(path.length<3){console.warn('Pan '+i+' : coordonnées invalides',plane);return;}
 
     const col=nxtClr();
     const poly=new google.maps.Polygon({
@@ -1329,22 +1297,22 @@ function _applyAIResult(result,coordMode,zoom,W,H,hasImg){
     created++;
   });
 
-  if(!created){toast('‚ùå IA : polygones invalides dans la r√©ponse ‚Äî r√©essayez');return;}
+  if(!created){toast('❌ IA : polygones invalides dans la réponse — réessayez');return;}
 
   updateMetrics();renderRightPanel();updateTable();
 
   const src=hasImg?'Claude + image sat.':'Claude + GPS/Solar';
-  document.getElementById('mSrc').textContent=src+' ¬∑ '+(result.building_type||'');
-  const note=result.notes?(' ‚Äî '+result.notes.slice(0,60)):'';
-  toast('‚úì IA : '+created+' pans ¬∑ '+(result.building_type||'toiture')+note+(hasImg?'':' ¬∑ ‚ö† sans image, ajustez les pans'));
+  document.getElementById('mSrc').textContent=src+' · '+(result.building_type||'');
+  const note=result.notes?(' — '+result.notes.slice(0,60)):'';
+  toast('✓ IA : '+created+' pans · '+(result.building_type||'toiture')+note+(hasImg?'':' · ⚠ sans image, ajustez les pans'));
   console.log('AI result full:',result);
 }
 
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
+// ════════════════════════════════════════════
+// ════════════════════════════════════════════
 // UNDO / REDO HISTORY
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 const _hist=[]; let _hIdx=-1;
 
 function saveSnapshot(){
@@ -1374,8 +1342,8 @@ function _updUndoBtn(){
   if(r){r.disabled=_hIdx>=_hist.length-1;r.style.opacity=_hIdx>=_hist.length-1?.4:1;}
 }
 
-function undo(){if(_hIdx<=0){toast('Rien √† annuler');return;}_hIdx--;_restoreSnap(JSON.parse(_hist[_hIdx]));_updUndoBtn();toast('‚Üê Annul√©');}
-function redo(){if(_hIdx>=_hist.length-1){toast('Rien √† r√©tablir');return;}_hIdx++;_restoreSnap(JSON.parse(_hist[_hIdx]));_updUndoBtn();toast('‚Üí R√©tabli');}
+function undo(){if(_hIdx<=0){toast('Rien à annuler');return;}_hIdx--;_restoreSnap(JSON.parse(_hist[_hIdx]));_updUndoBtn();toast('← Annulé');}
+function redo(){if(_hIdx>=_hist.length-1){toast('Rien à rétablir');return;}_hIdx++;_restoreSnap(JSON.parse(_hist[_hIdx]));_updUndoBtn();toast('→ Rétabli');}
 
 function _restoreSnap(state){
   segs.forEach(s=>{if(s.overlay)s.overlay.setMap(null);if(s.label)s.label.setMap(null);});
@@ -1411,10 +1379,10 @@ document.addEventListener('keydown',e=>{
   if((e.ctrlKey||e.metaKey)&&(e.key==='y'||(e.key==='z'&&e.shiftKey))){e.preventDefault();redo();}
 });
 
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
-// VERTEX SNAPPING (cross-polygon + 90¬∞ constraint)
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
+// ════════════════════════════════════════════
+// VERTEX SNAPPING (cross-polygon + 90° constraint)
+// ════════════════════════════════════════════
 const SNAP_DIST_M = 1.5;
 const SNAP_ANGLE_DEG = 7;
 let _snapping = false; // Guard against infinite loop
@@ -1446,7 +1414,7 @@ function _applyVertexSnap(poly,seg,movedIdx){
   }
   if(snapTarget){ path.setAt(movedIdx,snapTarget); return; }
 
-  // 2) Snap to 90¬∞ angle
+  // 2) Snap to 90° angle
   const n=path.getLength();
   const prev=path.getAt((movedIdx-1+n)%n);
   const next=path.getAt((movedIdx+1)%n);
@@ -1457,7 +1425,7 @@ function _applyVertexSnap(poly,seg,movedIdx){
     const cosA=(v1x*v2x+v1y*v2y)/(l1*l2);
     const angleDeg=Math.acos(Math.max(-1,Math.min(1,cosA)))*180/Math.PI;
     if(Math.abs(angleDeg-90)<SNAP_ANGLE_DEG){
-      // Move vertex along the bisector to make exact 90¬∞
+      // Move vertex along the bisector to make exact 90°
       const bx=v1x/l1+v2x/l2, by=v1y/l1+v2y/l2;
       const bl=Math.sqrt(bx*bx+by*by);
       if(bl>0){
@@ -1470,9 +1438,9 @@ function _applyVertexSnap(poly,seg,movedIdx){
   }
 }
 
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 // ALIGNER SUR TOIT VISIBLE (satellite snap)
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 let satSnapMode=false,_satSnapListener=null;
 
 function toggleSatSnap(){
@@ -1487,7 +1455,7 @@ function toggleSatSnap(){
       if(seg&&seg.polygon)_snapVertexToClick(seg,e.latLng);
     });
     setDMode('snap');
-    toast('üéØ Cliquez sur une ar√™te du toit pour y d√©placer le sommet le plus proche');
+    toast('🎯 Cliquez sur une arête du toit pour y déplacer le sommet le plus proche');
     // Auto-try edge detection
     const seg=segs.find(s=>s.id===selId);
     if(seg)setTimeout(()=>tryEdgeSnap(seg),200);
@@ -1516,7 +1484,7 @@ function _snapVertexToClick(seg,clickLL){
   }
 }
 
-// ‚îÄ‚îÄ Edge detection from satellite (Canvas API attempt) ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+// ── Edge detection from satellite (Canvas API attempt) ──────────────────────
 async function tryEdgeSnap(seg){
   if(!seg.polygon)return;
   const fp=getFootprint(seg);if(!fp.length)return;
@@ -1540,15 +1508,15 @@ async function tryEdgeSnap(seg){
         const imgData=ctx.getImageData(0,0,W,H);
         const edges=_sobelEdges(imgData.data,W,H);
         _snapVerticesToEdges(seg,edges,W,H,cLat2,cLng2,zoom);
-        toast('‚úì Sommets align√©s sur les ar√™tes d√©tect√©es');
+        toast('✓ Sommets alignés sur les arêtes détectées');
         resolve(true);
       }catch(e){
-        // CORS blocked or other error ‚Äî manual mode still works
-        toast('üéØ Mode manuel actif ‚Äî cliquez sur les ar√™tes du toit pour ajuster');
+        // CORS blocked or other error — manual mode still works
+        toast('🎯 Mode manuel actif — cliquez sur les arêtes du toit pour ajuster');
         resolve(false);
       }
     };
-    img.onerror=()=>{toast('üéØ Mode manuel actif ‚Äî cliquez sur les ar√™tes du toit');resolve(false);};
+    img.onerror=()=>{toast('🎯 Mode manuel actif — cliquez sur les arêtes du toit');resolve(false);};
     img.src=url;
   });
 }
@@ -1611,13 +1579,13 @@ function _snapVerticesToEdges(seg,edges,W,H,cLat2,cLng2,zoom){
   drawSeg(seg);updateMetrics();updateTable();
 }
 
-// ‚îÄ‚îÄ Update setDMode to handle snap mode ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+// ── Update setDMode to handle snap mode ───────────────────────────────────────
 // (patch inline below)
 
 // ROOF GEOMETRY POST-PROCESSING
-// Recalibrate, merge, align ‚Äî because Solar API gives axis-aligned bbox,
+// Recalibrate, merge, align — because Solar API gives axis-aligned bbox,
 // not properly oriented polygons
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 
 // Compute oriented polygon from API bounding box + azimuth
 // Converts N/S/E/W-aligned bbox to a rectangle aligned with roof slope direction
@@ -1646,8 +1614,8 @@ function computeOrientedPoly(seg){
   let minS=Math.min(...sp),maxS=Math.max(...sp);
   let minR=Math.min(...rp),maxR=Math.max(...rp);
 
-  // ‚îÄ‚îÄ Scale to match Solar API actual area ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
-  // Solar API gives the real inclined area ‚Üí footprint = area √ó cos(pitch)
+  // ── Scale to match Solar API actual area ───────────────────────
+  // Solar API gives the real inclined area → footprint = area × cos(pitch)
   if(seg.apiArea && seg.apiPitch !== undefined){
     const targetFootprint = seg.apiArea * Math.cos(d2r(seg.apiPitch));
     const currentW = maxR - minR; // ridge width
@@ -1709,14 +1677,14 @@ function recalibrerPans(){
     poly.addListener('mouseout',()=>hov(seg.id,false));
     n++;
   });
-  if(n===0){toast('Tous les pans sont d√©j√† des polygones √©ditables');return;}
+  if(n===0){toast('Tous les pans sont déjà des polygones éditables');return;}
   redrawAll();updateMetrics();renderRightPanel();updateTable();
-  toast(n+' pan(s) recalibr√©(s) ‚úì ‚Äî d√©placez les sommets verts pour ajuster');
+  toast(n+' pan(s) recalibré(s) ✓ — déplacez les sommets verts pour ajuster');
 }
 
 // Align all pans to the dominant building axis
 function alignerAxeDominant(){
-  if(!segs.length){toast('Aucun pan √† aligner');return;}
+  if(!segs.length){toast('Aucun pan à aligner');return;}
   // Dominant azimuth = circular mean of all azimuths
   const x=segs.reduce((s,seg)=>s+Math.cos(2*d2r(seg.azimuth)),0);
   const y=segs.reduce((s,seg)=>s+Math.sin(2*d2r(seg.azimuth)),0);
@@ -1732,9 +1700,9 @@ function alignerAxeDominant(){
       setF(seg.id,'azimuth',Math.round(target));changed++;
     }
   });
-  if(changed===0){toast('Pans d√©j√† align√©s sur l\'axe dominant ('+domAz.toFixed(0)+'¬∞)');return;}
+  if(changed===0){toast('Pans déjà alignés sur l\'axe dominant ('+domAz.toFixed(0)+'°)');return;}
   recalibrerPans();
-  toast('Axe dominant '+domAz.toFixed(0)+'¬∞ ¬∑ '+changed+' pan(s) r√©align√©s');
+  toast('Axe dominant '+domAz.toFixed(0)+'° · '+changed+' pan(s) réalignés');
 }
 
 // Cross product (for convex hull)
@@ -1764,7 +1732,7 @@ function convexHull(points){
 // Merge selected panels into one (convex hull)
 function mergeSelectedPans(){
   const sel=segs.filter(s=>s.selected);
-  if(sel.length<2){toast('S√©lectionnez au moins 2 pans √† fusionner');return;}
+  if(sel.length<2){toast('Sélectionnez au moins 2 pans à fusionner');return;}
   saveSnapshot();
 
   // Gather all vertices
@@ -1794,7 +1762,7 @@ function mergeSelectedPans(){
   const mergedId='m'+Date.now();
   const da=+(google.maps.geometry.spherical.computeArea(poly.getPath())).toFixed(2);
   const merged={
-    id:mergedId,name:'Pan fusionn√©',color:largest.color,visible:true,selected:true,
+    id:mergedId,name:'Pan fusionné',color:largest.color,visible:true,selected:true,
     pitch:largest.pitch,azimuth:largest.azimuth,type:largest.type,
     source:'manual',overlay:poly,polygon:poly,label:null,
     drawnArea:da,footprintArea:da,bb:null,center:null,sunQ:null,notes:'',
@@ -1814,11 +1782,11 @@ function mergeSelectedPans(){
 
   segs.push(merged);selId=mergedId;detId=mergedId;
   drawSeg(merged);updateMetrics();renderRightPanel();updateTable();
-  toast('Pans fusionn√©s ‚úì ‚Äî '+sel.length+' ‚Üí 1 ¬∑ ajustez les sommets si n√©cessaire');
+  toast('Pans fusionnés ✓ — '+sel.length+' → 1 · ajustez les sommets si nécessaire');
 }
 
 // DESIGNER
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 function startDraw(){
   if(!mapInst){toast('Chargez une adresse d\'abord');return;}
   azEdgeMode=false;
@@ -1869,14 +1837,14 @@ function convertToPoly(id){
   poly.addListener('mouseover',()=>hov(seg.id,true));
   poly.addListener('mouseout',()=>hov(seg.id,false));
   refreshArea(seg);drawSeg(seg);
-  toast('Polygone √©ditable ‚Äî d√©placez les sommets');renderRightPanel();
+  toast('Polygone éditable — déplacez les sommets');renderRightPanel();
 }
 
 function toggleAzMode(){
   azEdgeMode=!azEdgeMode;
   document.getElementById('dtAz').classList.toggle('on',azEdgeMode);
   setDMode(azEdgeMode?'az':'view');
-  if(azEdgeMode) toast('Cliquez sur le c√¥t√© BAS du pan pour d√©finir l\'azimut');
+  if(azEdgeMode) toast('Cliquez sur le côté BAS du pan pour définir l\'azimut');
 }
 
 function applyEdgeAz(seg,clickLL){
@@ -1893,7 +1861,7 @@ function applyEdgeAz(seg,clickLL){
       new google.maps.LatLng(bb.sw.latitude,bb.sw.longitude),
     ];
   }
-  if(pathPts.length<3){ toast('Convertissez d\'abord ce pan en polygone √©ditable (onglet Propri√©t√©s)'); return; }
+  if(pathPts.length<3){ toast('Convertissez d\'abord ce pan en polygone éditable (onglet Propriétés)'); return; }
 
   const n=pathPts.length;
   // Center (fallback to centroid of path)
@@ -1921,7 +1889,7 @@ function applyEdgeAz(seg,clickLL){
   azEdgeMode=false;
   document.getElementById('dtAz')?.classList.remove('on');
   setDMode('view');
-  toast('Azimut ‚Üí '+Math.round(az)+'¬∞ ('+azDir(az)+') ‚Äî c√¥t√© bas de la pente d√©fini');
+  toast('Azimut → '+Math.round(az)+'° ('+azDir(az)+') — côté bas de la pente défini');
   renderRightPanel();
 }
 
@@ -1944,8 +1912,8 @@ function deleteSelected(){
 
 function setDMode(mode){
   const b=document.getElementById('dbadge'),h=document.getElementById('mhint');
-  const lbl={view:'Vue',draw:'Dessin',edit:'√âdition',az:'Azimut c√¥t√©',snap:'Alignement'};
-  const hints={view:'',draw:'Cliquez pour placer les sommets ¬∑ Double-clic pour terminer ¬∑ √âchap pour annuler',edit:'D√©placez les sommets ¬∑ Suppr sur un sommet pour l\'effacer',az:'Cliquez sur le c√¥t√© BAS du pan pour d√©finir son azimut'};
+  const lbl={view:'Vue',draw:'Dessin',edit:'Édition',az:'Azimut côté',snap:'Alignement'};
+  const hints={view:'',draw:'Cliquez pour placer les sommets · Double-clic pour terminer · Échap pour annuler',edit:'Déplacez les sommets · Suppr sur un sommet pour l\'effacer',az:'Cliquez sur le côté BAS du pan pour définir son azimut'};
   b.textContent=lbl[mode]||mode;b.className='dbadge '+(mode!=='view'?mode:'');
   h.textContent=hints[mode]||'';h.className='mhintbar'+(mode!=='view'?' vis':'');
   if(mapInst)mapInst.setOptions({draggableCursor:mode==='draw'?'crosshair':mode==='az'?'cell':null});
@@ -1953,13 +1921,13 @@ function setDMode(mode){
   document.getElementById('dtEdit').classList.toggle('on',mode==='edit');
 }
 
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 // FIELD UPDATE
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
-// ‚îÄ‚îÄ Ridge height calculator ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+// ════════════════════════════════════════════
+// ── Ridge height calculator ──────────────────
 function calcRidgeH(seg){
   const fp=getFootprint(seg);
-  if(!fp.length) return (seg.eaveH||6).toFixed(1)+' m (pente √† d√©finir)';
+  if(!fp.length) return (seg.eaveH||6).toFixed(1)+' m (pente à définir)';
   const latM=111320,lngM=111320*Math.cos(d2r(cLat||50.8));
   const pts=fp.map(v=>({x:(v.lng-(cLng||4.4))*lngM,z:-(v.lat-(cLat||50.8))*latM}));
   const n=pts.length;
@@ -1982,9 +1950,9 @@ function setF(id,field,val){
   drawSeg(seg);
   if(field==='pitch'||field==='azimuth'||field==='eaveH'){
     const ep=document.querySelector('.evwrap');
-    if(ep)ep.innerHTML=elevSVG(seg.pitch,seg.azimuth)+'<div class="evlbl">'+ptLbl(seg.pitch)+' ¬∑ '+seg.pitch.toFixed(0)+'¬∞ ¬∑ '+azDir(seg.azimuth)+'</div>';
+    if(ep)ep.innerHTML=elevSVG(seg.pitch,seg.azimuth)+'<div class="evlbl">'+ptLbl(seg.pitch)+' · '+seg.pitch.toFixed(0)+'° · '+azDir(seg.azimuth)+'</div>';
     const al=document.querySelector('.area-live');
-    if(al)al.innerHTML=getArea(seg).toFixed(2)+' m¬≤<span>Surface ITE inclin√©e</span>';
+    if(al)al.innerHTML=getArea(seg).toFixed(2)+' m²<span>Surface ITE inclinée</span>';
     const rh=document.getElementById('ridgeH');
     if(rh)rh.textContent=calcRidgeH(seg);
   }
@@ -1994,25 +1962,25 @@ function setF(id,field,val){
   else{ if(show3D)buildTMeshes(); }
 }
 
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 // RIGHT PANEL
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
-function showLoading(){document.getElementById('rpbody').innerHTML='<div style="display:flex;align-items:center;justify-content:center;padding:2.5rem;gap:8px;color:var(--muted);font-size:12px"><span class="spin spg"></span> Analyse Solar API‚Ä¶</div>';}
+// ════════════════════════════════════════════
+function showLoading(){document.getElementById('rpbody').innerHTML='<div style="display:flex;align-items:center;justify-content:center;padding:2.5rem;gap:8px;color:var(--muted);font-size:12px"><span class="spin spg"></span> Analyse Solar API…</div>';}
 function renderRightPanel(){
   if(appMode==='analyse')renderAnalyse();else renderDesigner();
-  document.getElementById('rptitle').textContent=appMode==='analyse'?'Pans de toiture':'Designer ‚Äî Pans';
-  document.getElementById('rphint').textContent=appMode==='analyse'?'Cliquez pour s√©lectionner':'';
+  document.getElementById('rptitle').textContent=appMode==='analyse'?'Pans de toiture':'Designer — Pans';
+  document.getElementById('rphint').textContent=appMode==='analyse'?'Cliquez pour sélectionner':'';
 }
 function renderAnalyse(){
   const body=document.getElementById('rpbody');
-  if(!segs.length){body.innerHTML='<div style="text-align:center;padding:2rem;color:var(--muted);font-size:12px">Aucun pan d√©tect√©.</div>';return;}
+  if(!segs.length){body.innerHTML='<div style="text-align:center;padding:2rem;color:var(--muted);font-size:12px">Aucun pan détecté.</div>';return;}
   let h='<div class="pdiag">';
   segs.forEach(s=>{
     const dir=azDir(s.azimuth),area=getArea(s);
     const bg=s.selected?s.color:'#C0C0B8';
-    h+='<div class="pc'+(s.selected?' on':'')+'" data-id="'+s.id+'" style="flex:'+s.footprintArea+';background:'+bg+'" onclick="togglePSel(\''+s.id+'\')" onmouseenter="hov(\''+s.id+'\',true)" onmouseleave="hov(\''+s.id+'\',false)" title="'+esc(s.name)+' ¬∑ '+area.toFixed(1)+' m¬≤">'+
-      '<span class="pchk">‚úì</span>'+
-      '<div><span class="pa">'+area.toFixed(1)+'</span><br><span class="psm">m¬≤</span></div>'+
+    h+='<div class="pc'+(s.selected?' on':'')+'" data-id="'+s.id+'" style="flex:'+s.footprintArea+';background:'+bg+'" onclick="togglePSel(\''+s.id+'\')" onmouseenter="hov(\''+s.id+'\',true)" onmouseleave="hov(\''+s.id+'\',false)" title="'+esc(s.name)+' · '+area.toFixed(1)+' m²">'+
+      '<span class="pchk">✓</span>'+
+      '<div><span class="pa">'+area.toFixed(1)+'</span><br><span class="psm">m²</span></div>'+
       '<div class="pfoot"><span class="pdir">'+dir+'</span><span class="pnum">'+esc(s.name)+'</span></div>'+
     '</div>';
   });
@@ -2024,8 +1992,8 @@ function renderDesigner(){
   const body=document.getElementById('rpbody');
   // Sub-tabs always visible
   const tabs='<div class="des-tabs">'+
-    '<button class="des-tab'+(desView==='pans'?' on':'')+'" onclick="desView=\'pans\';renderRightPanel()">üìä Pans</button>'+
-    '<button class="des-tab'+(desView==='detail'?' on':'')+'" onclick="desView=\'detail\';renderRightPanel()">‚úè Propri√©t√©s</button>'+
+    '<button class="des-tab'+(desView==='pans'?' on':'')+'" onclick="desView=\'pans\';renderRightPanel()">📊 Pans</button>'+
+    '<button class="des-tab'+(desView==='detail'?' on':'')+'" onclick="desView=\'detail\';renderRightPanel()">✏ Propriétés</button>'+
   '</div>';
 
   if(!segs.length){
@@ -2039,17 +2007,17 @@ function renderDesigner(){
     segs.forEach(s=>{
       const dir=azDir(s.azimuth),area=getArea(s);
       const bg=s.selected?s.color:'#C0C0B8';
-      h+='<div class="pc'+(s.selected?' on':'')+'" data-id="'+s.id+'" style="flex:'+s.footprintArea+';background:'+bg+'" onclick="togglePSelDes(\''+s.id+'\')" onmouseenter="hov(\''+s.id+'\',true)" onmouseleave="hov(\''+s.id+'\',false)" title="'+esc(s.name)+' ¬∑ '+area.toFixed(1)+' m¬≤">'+
-        '<span class="pchk">‚úì</span>'+
-        '<div><span class="pa">'+area.toFixed(1)+'</span><br><span class="psm">m¬≤</span></div>'+
+      h+='<div class="pc'+(s.selected?' on':'')+'" data-id="'+s.id+'" style="flex:'+s.footprintArea+';background:'+bg+'" onclick="togglePSelDes(\''+s.id+'\')" onmouseenter="hov(\''+s.id+'\',true)" onmouseleave="hov(\''+s.id+'\',false)" title="'+esc(s.name)+' · '+area.toFixed(1)+' m²">'+
+        '<span class="pchk">✓</span>'+
+        '<div><span class="pa">'+area.toFixed(1)+'</span><br><span class="psm">m²</span></div>'+
         '<div class="pfoot"><span class="pdir">'+dir+'</span><span class="pnum">'+esc(s.name)+'</span></div>'+
       '</div>';
     });
     h+='</div>'+
     '<div style="display:flex;gap:8px;margin-top:8px">'+
-      '<button class="slnk" onclick="selAll()" style="font-size:10px">Tout s√©lectionner</button>'+
-      '<button class="slnk" onclick="deselAll()" style="font-size:10px">Tout d√©s√©lectionner</button>'+
-      '<button onclick="desView=\'detail\';renderRightPanel()" style="margin-left:auto;background:var(--g);color:#fff;border:none;border-radius:5px;padding:3px 9px;font-size:10px;font-weight:600;cursor:pointer">‚úè Modifier ‚Üí</button>'+
+      '<button class="slnk" onclick="selAll()" style="font-size:10px">Tout sélectionner</button>'+
+      '<button class="slnk" onclick="deselAll()" style="font-size:10px">Tout désélectionner</button>'+
+      '<button onclick="desView=\'detail\';renderRightPanel()" style="margin-left:auto;background:var(--g);color:#fff;border:none;border-radius:5px;padding:3px 9px;font-size:10px;font-weight:600;cursor:pointer">✏ Modifier →</button>'+
     '</div>';
     body.innerHTML=h;
     return;
@@ -2060,49 +2028,49 @@ function renderDesigner(){
   if(det){
     const area=getArea(det);
     body.innerHTML=tabs+
-      '<button class="det-back" onclick="detId=null;renderRightPanel()">‚Üê Liste</button>'+
+      '<button class="det-back" onclick="detId=null;renderRightPanel()">← Liste</button>'+
       '<div style="display:flex;align-items:center;gap:7px;margin-bottom:8px">'+
         '<span style="width:10px;height:10px;border-radius:50%;background:'+det.color+';display:inline-block;flex-shrink:0"></span>'+
         '<input style="flex:1;font-size:13px;font-weight:700;border:none;background:transparent;outline:none;color:var(--text);padding:2px 4px;border-radius:4px" value="'+esc(det.name)+'" onchange="setF(\''+det.id+'\',\'name\',this.value)" onfocus="this.style.background=\'var(--bg)\'" onblur="this.style.background=\'transparent\'" />'+
       '</div>'+
-      '<div class="area-live">'+area.toFixed(2)+' m¬≤<span>Surface ITE inclin√©e</span></div>'+
-      '<div class="evwrap">'+elevSVG(det.pitch,det.azimuth)+'<div class="evlbl">'+ptLbl(det.pitch)+' ¬∑ '+det.pitch.toFixed(0)+'¬∞ ¬∑ '+azDir(det.azimuth)+'</div></div>'+
+      '<div class="area-live">'+area.toFixed(2)+' m²<span>Surface ITE inclinée</span></div>'+
+      '<div class="evwrap">'+elevSVG(det.pitch,det.azimuth)+'<div class="evlbl">'+ptLbl(det.pitch)+' · '+det.pitch.toFixed(0)+'° · '+azDir(det.azimuth)+'</div></div>'+
       '<div class="ds">Type</div>'+
       '<div class="tcrow">'+
-        tc('incline','Inclin√©e',det.type,'<polyline points="3,14 20,5 37,14" stroke="currentColor" stroke-width="2" fill="none"/>')+
+        tc('incline','Inclinée',det.type,'<polyline points="3,14 20,5 37,14" stroke="currentColor" stroke-width="2" fill="none"/>')+
         tc('flat','Plate',det.type,'<line x1="3" y1="10" x2="37" y2="10" stroke="currentColor" stroke-width="2"/>')+
       '</div>'+
       '<div class="ds">Pente</div>'+
-      df('Pente','pitch',det.pitch.toFixed(1),'¬∞')+
-      '<div class="sldrow"><label>Pente</label><input type="range" min="0" max="75" step=".5" value="'+det.pitch+'" oninput="setF(\''+det.id+'\',\'pitch\',+this.value);this.nextElementSibling.textContent=this.value+\'¬∞\'" /><span class="sv">'+det.pitch.toFixed(0)+'¬∞</span></div>'+
-      '<div class="ds">Hauteur b√¢timent</div>'+
+      df('Pente','pitch',det.pitch.toFixed(1),'°')+
+      '<div class="sldrow"><label>Pente</label><input type="range" min="0" max="75" step=".5" value="'+det.pitch+'" oninput="setF(\''+det.id+'\',\'pitch\',+this.value);this.nextElementSibling.textContent=this.value+\'°\'" /><span class="sv">'+det.pitch.toFixed(0)+'°</span></div>'+
+      '<div class="ds">Hauteur bâtiment</div>'+
       '<div style="background:var(--bg);border-radius:6px;padding:8px 9px;margin-bottom:8px">'+
-        df('Goutti√®re basse (m)','eaveH',(det.eaveH||6).toFixed(1),'m')+
-        '<div class="sldrow"><label style="width:60px">Goutti√®re</label><input type="range" min="0" max="20" step=".5" value="'+(det.eaveH||6)+'" oninput="setF(\''+det.id+'\',\'eaveH\',+this.value);this.nextElementSibling.textContent=this.value+\'m\'" /><span class="sv">'+(det.eaveH||6)+'m</span></div>'+
+        df('Gouttière basse (m)','eaveH',(det.eaveH||6).toFixed(1),'m')+
+        '<div class="sldrow"><label style="width:60px">Gouttière</label><input type="range" min="0" max="20" step=".5" value="'+(det.eaveH||6)+'" oninput="setF(\''+det.id+'\',\'eaveH\',+this.value);this.nextElementSibling.textContent=this.value+\'m\'" /><span class="sv">'+(det.eaveH||6)+'m</span></div>'+
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px">'+
-          '<span style="font-size:10px;color:var(--muted)">Fa√Æti√®re estim√©e :</span>'+
+          '<span style="font-size:10px;color:var(--muted)">Faîtière estimée :</span>'+
           '<strong style="font-size:11px;color:var(--g)" id="ridgeH">'+calcRidgeH(det)+'</strong>'+
         '</div>'+
       '</div>'+
-      '<div class="ds">Terrain r√©el</div>'+
+      '<div class="ds">Terrain réel</div>'+
       (det.terrainEnabled
         ? '<div style="background:#E8F5E9;border-radius:6px;padding:7px 9px;margin-bottom:8px;font-size:11px;color:#2E7D32">'+
-            'üèî Terrain align√© ¬∑ relief '+(det.terrainData?( Math.max(...det.terrainData)-( det.baseElevation||0) ).toFixed(1)+' m':'‚Äî')+'<br>'+
-            '<button onclick="resetTerrain(\''+det.id+'\')" style="margin-top:4px;background:none;border:1px solid #A5D6A7;border-radius:4px;padding:2px 7px;font-size:10px;color:#388E3C;cursor:pointer">‚Ü∫ R√©initialiser</button>'+
+            '🏔 Terrain aligné · relief '+(det.terrainData?( Math.max(...det.terrainData)-( det.baseElevation||0) ).toFixed(1)+' m':'—')+'<br>'+
+            '<button onclick="resetTerrain(\''+det.id+'\')" style="margin-top:4px;background:none;border:1px solid #A5D6A7;border-radius:4px;padding:2px 7px;font-size:10px;color:#388E3C;cursor:pointer">↺ Réinitialiser</button>'+
           '</div>'
-        : '<button onclick="alignToTerrain(\''+det.id+'\')" style="width:100%;margin-bottom:8px;padding:6px;background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px">üèî Aligner au terrain r√©el <span style=\"font-size:9px;color:#66BB6A\">(Elevation API)</span></button>'
+        : '<button onclick="alignToTerrain(\''+det.id+'\')" style="width:100%;margin-bottom:8px;padding:6px;background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px">🏔 Aligner au terrain réel <span style=\"font-size:9px;color:#66BB6A\">(Elevation API)</span></button>'
       )+
       '<div class="ds">Azimut</div>'+
-      df('Azimut','azimuth',det.azimuth.toFixed(1),'¬∞')+
-      '<div class="sldrow"><label>Azimut</label><input type="range" min="0" max="359" step="1" value="'+det.azimuth+'" oninput="setF(\''+det.id+'\',\'azimuth\',+this.value);this.nextElementSibling.textContent=this.value+\'¬∞\'" /><span class="sv">'+det.azimuth.toFixed(0)+'¬∞</span></div>'+
-      '<button class="btn-az-edge'+(azEdgeMode?' on':'')+'" onclick="toggleAzMode()">üß≠ Cliquer un c√¥t√© pour l\'azimut</button>'+
-      '<div class="ds">Param√®tres</div>'+
+      df('Azimut','azimuth',det.azimuth.toFixed(1),'°')+
+      '<div class="sldrow"><label>Azimut</label><input type="range" min="0" max="359" step="1" value="'+det.azimuth+'" oninput="setF(\''+det.id+'\',\'azimuth\',+this.value);this.nextElementSibling.textContent=this.value+\'°\'" /><span class="sv">'+det.azimuth.toFixed(0)+'°</span></div>'+
+      '<button class="btn-az-edge'+(azEdgeMode?' on':'')+'" onclick="toggleAzMode()">🧭 Cliquer un côté pour l\'azimut</button>'+
+      '<div class="ds">Paramètres</div>'+
       tgl('Visible sur la carte','visible',det.visible,det.id)+
       tgl('Inclure dans le total','selected',det.selected,det.id)+
       '<div class="ds">Notes</div>'+
-      '<textarea style="width:100%;border:1px solid var(--bdr);border-radius:5px;padding:5px 7px;font-size:11px;resize:vertical;min-height:40px;outline:none;background:#fff;color:var(--t2)" placeholder="Lucarnes, chemin√©es‚Ä¶" onchange="setF(\''+det.id+'\',\'notes\',this.value)">'+esc(det.notes)+'</textarea>'+
-      (det.source==='api'&&!det.polygon?'<button class="btn-conv" onclick="convertToPoly(\''+det.id+'\')">‚¨° Convertir en polygone √©ditable</button>':'')+
-      '<button class="btn-delseg" onclick="deleteSelected()">üóë Supprimer ce pan</button>';
+      '<textarea style="width:100%;border:1px solid var(--bdr);border-radius:5px;padding:5px 7px;font-size:11px;resize:vertical;min-height:40px;outline:none;background:#fff;color:var(--t2)" placeholder="Lucarnes, cheminées…" onchange="setF(\''+det.id+'\',\'notes\',this.value)">'+esc(det.notes)+'</textarea>'+
+      (det.source==='api'&&!det.polygon?'<button class="btn-conv" onclick="convertToPoly(\''+det.id+'\')">⬡ Convertir en polygone éditable</button>':'')+
+      '<button class="btn-delseg" onclick="deleteSelected()">🗑 Supprimer ce pan</button>';
     return;
   }
   // List
@@ -2112,8 +2080,8 @@ function renderDesigner(){
     const area=getArea(s);
     h+='<div class="sli'+(s.id===selId?' active':'')+'" data-id="'+s.id+'" onclick="openDet(\''+s.id+'\')" onmouseenter="hov(\''+s.id+'\',true)" onmouseleave="hov(\''+s.id+'\',false)">'+
       '<span class="slid" style="background:'+s.color+'"></span><span class="sln">'+esc(s.name)+'</span>'+
-      '<span class="sla">'+area.toFixed(1)+' m¬≤</span>'+
-      '<button class="slico'+(s.visible?' on':'')+'" onclick="event.stopPropagation();setVis(\''+s.id+'\')">'+(s.visible?'üëÅ':'‚óã')+'</button>'+
+      '<span class="sla">'+area.toFixed(1)+' m²</span>'+
+      '<button class="slico'+(s.visible?' on':'')+'" onclick="event.stopPropagation();setVis(\''+s.id+'\')">'+(s.visible?'👁':'○')+'</button>'+
     '</div>';
   });
   h+='</div>';
@@ -2132,9 +2100,9 @@ function tgl(lbl,field,val,id){return'<div class="tglrow"><label>'+lbl+'</label>
 function openDet(id){selId=id;detId=id;desView='detail';redrawAll();renderRightPanel();document.getElementById('dtDel').style.display='inline-flex';document.getElementById('dtAz').style.display='inline-flex';}
 function setVis(id){const s=segs.find(x=>x.id===id);if(!s)return;s.visible=!s.visible;drawSeg(s);renderRightPanel();}
 
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 // SELECTION & METRICS
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 function togglePSel(id){const s=segs.find(x=>x.id===id);if(!s)return;s.selected=!s.selected;selId=id;redrawAll();updateMetrics();renderRightPanel();updateTable();}
 function selAll(){segs.forEach(s=>s.selected=true);updateMetrics();renderRightPanel();updateTable();}
 function deselAll(){segs.forEach(s=>s.selected=false);updateMetrics();renderRightPanel();updateTable();}
@@ -2143,11 +2111,11 @@ function updateMetrics(){
   const sel=segs.filter(s=>s.selected);
   const tot=sel.reduce((a,s)=>a+getArea(s),0);
   const totAll=segs.reduce((a,s)=>a+getArea(s),0);
-  document.getElementById('mTot').innerHTML=tot.toFixed(1)+'<span class="mu"> m¬≤</span>';
+  document.getElementById('mTot').innerHTML=tot.toFixed(1)+'<span class="mu"> m²</span>';
   document.getElementById('mPans').textContent=segs.length;
   document.getElementById('mSel').textContent=sel.length;
   document.getElementById('totval').textContent=tot.toFixed(1);
-  document.getElementById('totsub').textContent=sel.length+'/'+segs.length+' pans ¬∑ total : '+totAll.toFixed(1)+' m¬≤';
+  document.getElementById('totsub').textContent=sel.length+'/'+segs.length+' pans · total : '+totAll.toFixed(1)+' m²';
 }
 function updateTable(){
   const tb=document.getElementById('tbody');tb.innerHTML='';
@@ -2156,19 +2124,19 @@ function updateTable(){
     const tr=document.createElement('tr');
     tr.className=s.selected?'on':'';
     tr.onclick=()=>{s.selected=!s.selected;selId=s.id;redrawAll();updateMetrics();renderRightPanel();updateTable();};
-    tr.innerHTML='<td><span class="chk '+(s.selected?'on':'off')+'">'+(s.selected?'‚úì':'')+'</span></td>'+
+    tr.innerHTML='<td><span class="chk '+(s.selected?'on':'off')+'">'+(s.selected?'✓':'')+'</span></td>'+
       '<td><strong>'+esc(s.name)+'</strong></td>'+
-      '<td><strong>'+area.toFixed(2)+' m¬≤</strong></td>'+
-      '<td style="color:var(--t2)">'+ptLbl(s.pitch)+' ('+s.pitch.toFixed(0)+'¬∞)</td>'+
-      '<td><span class="bdg '+bCls(dir)+'">'+dir+' ¬∑ '+s.azimuth.toFixed(0)+'¬∞</span></td>'+
+      '<td><strong>'+area.toFixed(2)+' m²</strong></td>'+
+      '<td style="color:var(--t2)">'+ptLbl(s.pitch)+' ('+s.pitch.toFixed(0)+'°)</td>'+
+      '<td><span class="bdg '+bCls(dir)+'">'+dir+' · '+s.azimuth.toFixed(0)+'°</span></td>'+
       '<td style="color:'+sunClr(s.sunQ)+';font-weight:500">'+sunStr(s.sunQ)+'</td>';
     tb.appendChild(tr);
   });
 }
 
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 // ELEVATION SVG
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 function elevSVG(pitch,az){
   const W=220,H=58,p=Math.min(+pitch,70),rad=d2r(p),hB=80,fl=H-7,pk=fl-Math.tan(rad)*hB;
   const col=DCLR[azDir(+az)]||'#888',px=W/2;
@@ -2176,44 +2144,44 @@ function elevSVG(pitch,az){
     '<line x1="28" y1="'+fl+'" x2="'+(W-28)+'" y2="'+fl+'" stroke="#ddd" stroke-width="1"/>'+
     '<polygon points="'+(px-hB)+','+fl+' '+px+','+pk+' '+(px+hB)+','+fl+'" fill="'+col+'" opacity=".15" stroke="'+col+'" stroke-width="2"/>'+
     (p>3?'<path d="M'+(px+20)+','+fl+' A20,20 0 0,0 '+(px+20*Math.cos(Math.PI-rad))+','+(fl-20*Math.sin(rad))+'" fill="none" stroke="'+col+'" stroke-width="1.5"/>':'')+
-    (p>3?'<text x="'+(px+30)+'" y="'+(fl-6)+'" font-size="9" fill="'+col+'" font-weight="700" font-family="Arial">'+p.toFixed(0)+'¬∞</text>':'')+
+    (p>3?'<text x="'+(px+30)+'" y="'+(fl-6)+'" font-size="9" fill="'+col+'" font-weight="700" font-family="Arial">'+p.toFixed(0)+'°</text>':'')+
     '<text x="'+px+'" y="'+(Math.max(8,pk-3))+'" text-anchor="middle" font-size="8" fill="'+col+'" font-family="Arial">'+azDir(+az)+'</text>'+
   '</svg>';
 }
 
 function setNote(){
   const n={
-    analyse:'<strong>Surface ITE</strong> = surface r√©elle inclin√©e (recalcule automatiquement quand la pente change).<br>'+
-      '<strong>‚ñ≤ Prismes 3D</strong> : active le rendu WebGL des prismes directement sur la carte satellite (n√©cessite 986c697e2ebf204c782b2d6d ou un MapID production).<br>'+
-      '<strong>‚Üë Tilt 3D</strong> : incline la carte √† 67.5¬∞ ‚Äî les overlays apparaissent en perspective 3D sur le b√¢timent.<br>'+
-      '<strong>‚¨° Vue 3D</strong> : mod√®le Three.js ind√©pendant avec prismes solides et √©tiquettes.',
-    designer:'<strong>Nouveau pan</strong> : dessinez le contour exact sur la carte. <strong>üß≠ Azimut c√¥t√©</strong> : cliquez le bord bas du pan pour d√©finir automatiquement l\'orientation.<br>'+
-      'Surface ITE recalcule en temps r√©el quand vous changez la pente. Prismes 3D mis √† jour instantan√©ment.',
+    analyse:'<strong>Surface ITE</strong> = surface réelle inclinée (recalcule automatiquement quand la pente change).<br>'+
+      '<strong>▲ Prismes 3D</strong> : active le rendu WebGL des prismes directement sur la carte satellite (nécessite 986c697e2ebf204c782b2d6d ou un MapID production).<br>'+
+      '<strong>↑ Tilt 3D</strong> : incline la carte à 67.5° — les overlays apparaissent en perspective 3D sur le bâtiment.<br>'+
+      '<strong>⬡ Vue 3D</strong> : modèle Three.js indépendant avec prismes solides et étiquettes.',
+    designer:'<strong>Nouveau pan</strong> : dessinez le contour exact sur la carte. <strong>🧭 Azimut côté</strong> : cliquez le bord bas du pan pour définir automatiquement l\'orientation.<br>'+
+      'Surface ITE recalcule en temps réel quand vous changez la pente. Prismes 3D mis à jour instantanément.',
   };
   document.getElementById('noteEl').innerHTML=n[appMode]||'';
 }
 
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 // EXPORT
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 function copyExport(){
   const sel=segs.filter(s=>s.selected);
   const tot=sel.reduce((a,s)=>a+getArea(s),0);
   const totAll=segs.reduce((a,s)=>a+getArea(s),0);
-  const lines=['MESURE TOITURE ITE ‚Äî WeCover','Adresse : '+cLabel,'Date : '+new Date().toLocaleDateString('fr-BE'),'','PANS S√âLECTIONN√âS :'];
-  sel.forEach(s=>lines.push('  '+s.name+' | '+getArea(s).toFixed(2)+' m¬≤ | '+ptLbl(s.pitch)+' ('+s.pitch.toFixed(0)+'¬∞) | '+azDir(s.azimuth)+' ('+s.azimuth.toFixed(0)+'¬∞)'+(s.notes?' | '+s.notes:'')));
-  lines.push('','Surface ITE s√©lectionn√©e : '+tot.toFixed(2)+' m¬≤','Surface ITE totale : '+totAll.toFixed(2)+' m¬≤');
+  const lines=['MESURE TOITURE ITE — WeCover','Adresse : '+cLabel,'Date : '+new Date().toLocaleDateString('fr-BE'),'','PANS SÉLECTIONNÉS :'];
+  sel.forEach(s=>lines.push('  '+s.name+' | '+getArea(s).toFixed(2)+' m² | '+ptLbl(s.pitch)+' ('+s.pitch.toFixed(0)+'°) | '+azDir(s.azimuth)+' ('+s.azimuth.toFixed(0)+'°)'+(s.notes?' | '+s.notes:'')));
+  lines.push('','Surface ITE sélectionnée : '+tot.toFixed(2)+' m²','Surface ITE totale : '+totAll.toFixed(2)+' m²');
   navigator.clipboard.writeText(lines.join('\n')).then(()=>{const c=document.getElementById('copied');c.style.display='inline';setTimeout(()=>c.style.display='none',2500);});
 }
 
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 // UI
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 // Check key status on page load
 // Enter key in modal input
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
-// √âCHAFAUDAGE ‚Äî estimation ITE
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
+// ÉCHAFAUDAGE — estimation ITE
+// ════════════════════════════════════════════
 let _scaffOpen=false;
 function toggleScaffolding(){
   _scaffOpen=!_scaffOpen;
@@ -2224,7 +2192,7 @@ function toggleScaffolding(){
 
 function renderScaffolding(){
   const div=document.getElementById('scaffContent');if(!div)return;
-  if(!segs.length){div.innerHTML='<p style="color:var(--muted);font-size:12px">Aucun pan d√©tect√©.</p>';return;}
+  if(!segs.length){div.innerHTML='<p style="color:var(--muted);font-size:12px">Aucun pan détecté.</p>';return;}
 
   const latM=111320,lngM=111320*Math.cos(d2r(cLat));
   const eaveH=segs[0]?.eaveH||6;
@@ -2256,35 +2224,35 @@ function renderScaffolding(){
   div.innerHTML=`
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">
       <div style="background:var(--bg);border-radius:7px;padding:8px;text-align:center">
-        <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">P√©rim√®tre b√¢t.</div>
+        <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Périmètre bât.</div>
         <div style="font-size:18px;font-weight:700">${perimeter.toFixed(1)}<span style="font-size:11px;color:var(--muted)"> m</span></div>
       </div>
       <div style="background:var(--bg);border-radius:7px;padding:8px;text-align:center">
-        <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Goutti√®re basse</div>
+        <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Gouttière basse</div>
         <div style="font-size:18px;font-weight:700">${eaveH.toFixed(1)}<span style="font-size:11px;color:var(--muted)"> m</span></div>
       </div>
       <div style="background:var(--bg);border-radius:7px;padding:8px;text-align:center">
-        <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Fa√Æti√®re max</div>
+        <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Faîtière max</div>
         <div style="font-size:18px;font-weight:700">${ridgeH.toFixed(1)}<span style="font-size:11px;color:var(--muted)"> m</span></div>
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
       <div style="background:#E8F5E9;border-radius:7px;padding:10px;text-align:center">
-        <div style="font-size:9px;color:#2E7D32;font-weight:700;text-transform:uppercase">√âchafaudage goutti√®re</div>
-        <div style="font-size:22px;font-weight:700;color:#1B5E20">${scaffTotal.toFixed(0)}<span style="font-size:13px"> m¬≤</span></div>
-        <div style="font-size:9px;color:#388E3C">P√©rim√®tre √ó ${eaveH.toFixed(1)}m √ó 1,15</div>
+        <div style="font-size:9px;color:#2E7D32;font-weight:700;text-transform:uppercase">Échafaudage gouttière</div>
+        <div style="font-size:22px;font-weight:700;color:#1B5E20">${scaffTotal.toFixed(0)}<span style="font-size:13px"> m²</span></div>
+        <div style="font-size:9px;color:#388E3C">Périmètre × ${eaveH.toFixed(1)}m × 1,15</div>
       </div>
       <div style="background:#E3F0FA;border-radius:7px;padding:10px;text-align:center">
-        <div style="font-size:9px;color:#1565C0;font-weight:700;text-transform:uppercase">√âchafaudage fa√Æti√®re</div>
-        <div style="font-size:22px;font-weight:700;color:#0D2B45">${scaffRidge.toFixed(0)}<span style="font-size:13px"> m¬≤</span></div>
-        <div style="font-size:9px;color:#1976D2">P√©rim√®tre √ó ${ridgeH.toFixed(1)}m √ó 1,15</div>
+        <div style="font-size:9px;color:#1565C0;font-weight:700;text-transform:uppercase">Échafaudage faîtière</div>
+        <div style="font-size:22px;font-weight:700;color:#0D2B45">${scaffRidge.toFixed(0)}<span style="font-size:13px"> m²</span></div>
+        <div style="font-size:9px;color:#1976D2">Périmètre × ${ridgeH.toFixed(1)}m × 1,15</div>
       </div>
     </div>`;
 }
 
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 // RAPPORT PDF
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 async function generatePDFReport(){
   // Load jsPDF from CDN
   if(!window.jspdf){
@@ -2303,30 +2271,30 @@ async function generatePDFReport(){
   // Header
   doc.setFillColor(59,109,17);doc.rect(0,0,210,22,'F');
   doc.setTextColor(255,255,255);doc.setFontSize(16);doc.setFont('helvetica','bold');
-  doc.text('WeCover ‚Äî Mesure Toiture ITE',14,10);
+  doc.text('WeCover — Mesure Toiture ITE',14,10);
   doc.setFontSize(9);doc.setFont('helvetica','normal');
-  doc.text('Rapport g√©n√©r√© le '+date,14,16);
+  doc.text('Rapport généré le '+date,14,16);
 
   // Address
   doc.setTextColor(30,30,30);doc.setFontSize(11);doc.setFont('helvetica','bold');
   doc.text('Adresse :',14,32);
-  doc.setFont('helvetica','normal');doc.text(cLabel||'‚Äî',50,32);
+  doc.setFont('helvetica','normal');doc.text(cLabel||'—',50,32);
 
   // KPIs
   doc.setFillColor(234,243,222);doc.roundedRect(14,38,86,22,3,3,'F');
   doc.setFillColor(227,238,250);doc.roundedRect(110,38,86,22,3,3,'F');
   doc.setFont('helvetica','bold');doc.setFontSize(18);
-  doc.setTextColor(59,109,17);doc.text(tot.toFixed(1)+' m¬≤',22,51);
+  doc.setTextColor(59,109,17);doc.text(tot.toFixed(1)+' m²',22,51);
   doc.setTextColor(21,101,192);doc.text(sel.length+' pan(s)',118,51);
   doc.setFontSize(8);doc.setFont('helvetica','normal');
-  doc.setTextColor(39,80,10);doc.text('Surface ITE inclin√©e (s√©lectionn√©e)',22,57);
-  doc.setTextColor(13,43,69);doc.text('Pans s√©lectionn√©s',118,57);
+  doc.setTextColor(39,80,10);doc.text('Surface ITE inclinée (sélectionnée)',22,57);
+  doc.setTextColor(13,43,69);doc.text('Pans sélectionnés',118,57);
 
   // Table
   let y=72;
   doc.setFillColor(250,250,248);doc.rect(14,y,182,7,'F');
   doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(100,100,90);
-  ['Pan','Surface ITE','Pente','Orientation','Goutti√®re','Fa√Æti√®re'].forEach((h,i)=>{
+  ['Pan','Surface ITE','Pente','Orientation','Gouttière','Faîtière'].forEach((h,i)=>{
     doc.text(h,[14,56,90,115,148,168][i],y+5);
   });
   y+=8;
@@ -2343,9 +2311,9 @@ async function generatePDFReport(){
     const range=Math.max((projs.length?Math.max(...projs)-Math.min(...projs):0),0.5);
     const ridgeH=((s.eaveH||6)+range*Math.tan(d2r(s.pitch))).toFixed(1);
     doc.text(s.name,14,y+5);
-    doc.text(getArea(s).toFixed(2)+' m¬≤',56,y+5);
-    doc.text(s.pitch.toFixed(0)+'¬∞',90,y+5);
-    doc.text(azDir(s.azimuth)+' '+s.azimuth.toFixed(0)+'¬∞',115,y+5);
+    doc.text(getArea(s).toFixed(2)+' m²',56,y+5);
+    doc.text(s.pitch.toFixed(0)+'°',90,y+5);
+    doc.text(azDir(s.azimuth)+' '+s.azimuth.toFixed(0)+'°',115,y+5);
     doc.text((s.eaveH||6).toFixed(1)+' m',148,y+5);
     doc.text(ridgeH+' m',168,y+5);
     y+=7;
@@ -2354,25 +2322,25 @@ async function generatePDFReport(){
   // Total
   y+=3;doc.setFillColor(59,109,17);doc.rect(14,y,182,8,'F');
   doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(9);
-  doc.text('TOTAL SURFACE ITE S√âLECTIONN√âE',14,y+5.5);
-  doc.text(tot.toFixed(2)+' m¬≤',168,y+5.5);
+  doc.text('TOTAL SURFACE ITE SÉLECTIONNÉE',14,y+5.5);
+  doc.text(tot.toFixed(2)+' m²',168,y+5.5);
 
   // Footer
   doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(150,150,140);
-  doc.text('WeCover ‚Äî We Green Energy SRL ¬∑ Ikaroslaan 83, 1930 Zaventem ¬∑ we-green.be',14,285);
-  doc.text('Mesures indicatives sur base Google Solar API + orthophoto IGN. √Ä confirmer sur site.',14,289);
+  doc.text('WeCover — We Green Energy SRL · Ikaroslaan 83, 1930 Zaventem · we-green.be',14,285);
+  doc.text('Mesures indicatives sur base Google Solar API + orthophoto IGN. À confirmer sur site.',14,289);
 
   doc.save('WeCover_Toiture_'+date.replace(/\//g,'-')+'.pdf');
-  toast('üìÑ Rapport PDF g√©n√©r√© ‚úì');
+  toast('📄 Rapport PDF généré ✓');
 }
 
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// ════════════════════════════════════════════
 // GOOGLE PHOTOREALISTIC 3D TILES
-// Vue r√©elle des b√¢timents (m√™me source que Google Earth)
-// ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+// Vue réelle des bâtiments (même source que Google Earth)
+// ════════════════════════════════════════════
 let _3dTilesOn=false;
 
-function setSL(on){document.getElementById('sico').innerHTML=on?'<span class="spin"></span>':'‚ñ≤';document.getElementById('btnS').disabled=on;}
+function setSL(on){document.getElementById('sico').innerHTML=on?'<span class="spin"></span>':'▲';document.getElementById('btnS').disabled=on;}
 function showErr(m){const b=document.getElementById('ebar');b.textContent=m;b.style.display='block';}
 function hideErr(){document.getElementById('ebar').style.display='none';}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2400);}
