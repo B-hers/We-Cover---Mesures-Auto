@@ -1293,163 +1293,135 @@ function hideProgress(){
 
 async function analyzeDeep(){
   if(!cLat||!cLng){toast('Chargez une adresse d\'abord');return;}
+
+  // Cadastre requis : auto-chargement si absent
   if(!cBuildingFootprint||cBuildingFootprint.length<3){
-    toast('❌ Chargez le cadastre OSM d\'abord');
-    // Auto-load cadastre if not present
-    showProgress('Chargement du cadastre...', 'Récupération emprise OSM via Overpass', 10);
+    showProgress('Chargement du cadastre','Recuperation emprise OSM via Overpass...',8);
     await loadCadastre();
     if(!cBuildingFootprint||cBuildingFootprint.length<3){
       hideProgress();
-      toast('❌ Impossible de charger le cadastre');
+      toast('❌ Cadastre introuvable pour cette adresse');
       return;
     }
   }
-  
-  const btn=document.getElementById('btnS');
-  const orig=btn.innerHTML;
-  btn.innerHTML='<span class="spin"></span> Analyse...';
-  btn.disabled=true;
+
+  const btn=document.getElementById('btnDeep');
+  const orig=btn?btn.innerHTML:null;
+  if(btn){btn.innerHTML='<span class="spin"></span> Analyse...';btn.disabled=true;}
+
+  // Progression simulee pendant l'attente backend (le backend ne stream pas)
+  let pct=12;
+  showProgress('Phase 1/3 : Inventaire','Claude identifie les batiments dans l\'emprise...',pct);
+  const tick=setInterval(()=>{
+    pct=Math.min(pct+1.2,88);
+    if(pct<35)showProgress('Phase 1/3 : Inventaire','Claude identifie les batiments dans l\'emprise...',pct);
+    else if(pct<75)showProgress('Phase 2/3 : Analyse detaillee','Analyse dediee de chaque toiture (pixels -> GPS)...',pct);
+    else showProgress('Phase 3/3 : Validation geometrique','Clamp cadastre + recalcul des surfaces...',pct);
+  },1500);
 
   try{
-    showProgress('Phase 1/3 : Inventaire', 'Claude scanne tous les bâtiments de l\'emprise...', 15);
-
-    // Appel endpoint deep analysis
     const resp=await fetch(`${BACKEND_URL}/api/analyze-deep`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        lat: cLat,
-        lng: cLng,
-        building_footprint: cBuildingFootprint,
-        region: null, // auto-detect
+        lat:cLat, lng:cLng,
+        label:document.getElementById('addr')?.value||'',
+        region:cRegion&&cRegion!=='unknown'?cRegion:'auto',
+        building_footprint:cBuildingFootprint,
       }),
     });
-    
+    clearInterval(tick);
     if(!resp.ok){
       const e=await resp.text();
-      throw new Error('Backend '+resp.status+': '+e.slice(0,200));
+      throw new Error('Backend '+resp.status+': '+e.slice(0,180));
     }
-    
-    showProgress('Phase 2/3 : Analyse détaillée', 'Traitement approfondi de chaque toiture...', 50);
     const result=await resp.json();
-    
-    showProgress('Phase 3/3 : Validation', 'Vérification cohérence et contraintes cadastrales...', 85);
-    
-    // Check validation
-    if(!result.validated){
-      toast('⚠️ Validation échouée : '+result.warnings.join(', '));
-    }
-    
-    // Clear existing
-    segs.forEach(s=>{if(s.overlay)s.overlay.setMap(null);if(s.label)s.label.setMap(null);});
-    segs=[];
-    colorIdx=0;
-    
-    // Apply results per building
-    let totalArea=0;
-    let totalPlanes=0;
-    
-    (result.buildings || []).forEach((building,bIdx)=>{
-      building.planes.forEach((plane,pIdx)=>{
-        if(!plane.polygon||plane.polygon.length<3)return;
-        
-        const path=plane.polygon.map(([lng,lat])=>({lat,lng}));
-        const area=plane.area_m2||0;
-        const az=plane.orientation_deg||0;
-        const sl=plane.slope_deg||30;
-        
-        // Create segment
-        const s={
-          origin:'api',
-          path,
-          azimut:az,
-          pente:sl,
-          dirLabel:azimutToLabel(az),
-          surface:area,
-          color:COLORS[colorIdx%COLORS.length],
-        };
-        
-        // Draw polygon
-        s.overlay=new google.maps.Polygon({
-          paths:s.path,
-          strokeColor:s.color,
-          strokeWeight:2.5,
-          strokeOpacity:.85,
-          fillColor:s.color,
-          fillOpacity:.15,
-          clickable:true,
-          zIndex:2,
-          map:mapInst,
-        });
-        
-        // Label
-        const bnds=new google.maps.LatLngBounds();
-        s.path.forEach(p=>bnds.extend(p));
-        const cnt=bnds.getCenter();
-        s.label=new google.maps.Marker({
-          position:cnt,
-          map:mapInst,
-          icon:{
-            path:google.maps.SymbolPath.CIRCLE,
-            scale:0,
-          },
-          label:{
-            text:`B${bIdx+1}P${pIdx+1} ${area.toFixed(0)}m²`,
-            color:s.color,
-            fontSize:'11px',
-            fontWeight:'700',
-          },
-          clickable:false,
-          zIndex:3,
-        });
-        
-        // Click handler
-        s.overlay.addListener('click',()=>{
-          segs.forEach(sg=>{sg.selected=false;if(sg.overlay)sg.overlay.setOptions({strokeWeight:2.5});});
-          s.selected=true;
-          s.overlay.setOptions({strokeWeight:4.5});
-          displayDetail(s);
-        });
-        
-        segs.push(s);
-        colorIdx++;
-        totalArea+=area;
-        totalPlanes++;
+    _applyDeepResult(result);
+
+    showProgress('✓ Analyse terminee',
+      `${result.n_buildings} batiment(s) · ${result.n_planes} pans · ${result.total_area_m2} m²`,100);
+    setTimeout(hideProgress,2500);
+
+    let msg=`✓ Approfondie : ${result.n_planes} pans · ${result.total_area_m2}m²`;
+    if((result.corrections_applied||[]).length)msg+=' · '+result.corrections_applied.length+' correction(s) cadastre';
+    if((result.warnings||[]).length)msg+=' · ⚠ '+result.warnings[0];
+    toast(msg.slice(0,200));
+    console.log('Deep analysis:',result);
+
+  }catch(e){
+    clearInterval(tick);
+    hideProgress();
+    console.error('Deep analysis error:',e);
+    toast('❌ Analyse approfondie : '+e.message.slice(0,140));
+  }finally{
+    if(btn){btn.innerHTML=orig;btn.disabled=false;}
+  }
+}
+
+// Integre les resultats deep dans la machinerie standard de l'app
+// (segments identiques au bouton IA -> table, diagramme, export, edition OK)
+function _applyDeepResult(result){
+  const planes=[];
+  (result.buildings||[]).forEach(b=>{
+    (b.planes||[]).forEach(p=>{
+      if(!p.polygon||p.polygon.length<3)return;
+      planes.push({
+        name:(result.buildings.length>1?('B'+b.building_id+' · '):'')+(p.name||p.id),
+        path:p.polygon.map(([lg,lt])=>({lat:lt,lng:lg})),
+        pitch_deg:p.slope_deg,
+        azimuth_deg:p.orientation_deg,
+        area_m2:p.area_m2,
       });
     });
-    
-    showProgress('✓ Terminé', `${result.buildings.length} bâtiment(s), ${totalPlanes} pans, ${totalArea.toFixed(0)}m²`, 100);
-    
-    // Update UI
-    document.getElementById('mTot').innerHTML=`${totalArea.toFixed(1)}<span class="mu"> m²</span>`;
-    document.getElementById('mPans').innerHTML=totalPlanes;
-    document.getElementById('mSel').innerHTML=totalPlanes;
-    document.getElementById('mSrc').innerHTML='IA deep';
-    document.getElementById('res').style.display='block';
-    
-    renderPanDiagram();
-    
-    // Hide progress after 2 seconds
-    setTimeout(hideProgress, 2000);
-    
-    // Corrections info
-    const corr=result.corrections_applied||[];
-    const warn=result.warnings||[];
-    let msg=`✓ ${result.buildings.length} bâtiment(s), ${totalPlanes} pans, ${totalArea.toFixed(0)}m²`;
-    if(corr.length>0)msg+=` · Corrections: ${corr.join(', ')}`;
-    if(warn.length>0)msg+=` · ⚠️ ${warn.join(', ')}`;
-    
-    toast(msg.slice(0,200));
-    console.log('Deep analysis result:', result);
-    
-  }catch(e){
-    console.error('Deep analysis error:',e);
-    hideProgress();
-    toast('❌ Analyse approfondie : '+e.message.slice(0,120));
-  }finally{
-    btn.innerHTML=orig;
-    btn.disabled=false;
-  }
+  });
+  if(!planes.length){toast('❌ Aucun pan exploitable dans la reponse');return;}
+
+  saveSnapshot();
+  segs.forEach(s=>{if(s.overlay)s.overlay.setMap(null);if(s.label)s.label.setMap(null);});
+  segs=[];colorIdx=0;
+
+  planes.forEach((pl,i)=>{
+    const col=nxtClr();
+    const poly=new google.maps.Polygon({
+      paths:pl.path,fillColor:col,strokeColor:col,
+      fillOpacity:.4,strokeWeight:2.5,editable:true,clickable:true,zIndex:10,map:mapInst,
+    });
+    const seg={
+      id:'deep'+Date.now()+'_'+i,
+      name:pl.name||('Pan '+(i+1)),
+      color:col,visible:true,selected:true,
+      pitch:+(pl.pitch_deg||30),
+      azimuth:+(pl.azimuth_deg||180),
+      type:(+(pl.pitch_deg||30))<3?'flat':'incline',
+      source:'manual',overlay:poly,polygon:poly,label:null,
+      eaveH:6,
+      drawnArea:+(google.maps.geometry.spherical.computeArea(poly.getPath())).toFixed(2),
+      footprintArea:0,bb:null,center:null,sunQ:null,
+      notes:'IA approfondie',
+      terrainData:null,terrainEnabled:false,baseElevation:null,
+    };
+    seg.footprintArea=seg.drawnArea;
+    refreshArea(seg);
+    const upd=()=>{
+      seg.drawnArea=+(google.maps.geometry.spherical.computeArea(seg.polygon.getPath())).toFixed(2);
+      seg.footprintArea=seg.drawnArea;refreshArea(seg);
+      drawSeg(seg);updateMetrics();updateTable();
+      if(detId===seg.id)renderRightPanel();
+    };
+    ['set_at','insert_at','remove_at'].forEach(ev=>poly.getPath().addListener(ev,upd));
+    poly.addListener('click',e=>{
+      if(azEdgeMode)applyEdgeAz(seg,e.latLng);
+      else if(satSnapMode&&selId===seg.id)_snapVertexToClick(seg,e.latLng);
+      else clickSeg(seg.id);
+    });
+    poly.addListener('mouseover',()=>hov(seg.id,true));
+    poly.addListener('mouseout',()=>hov(seg.id,false));
+    _attachSnapListeners(poly,seg);
+    segs.push(seg);drawSeg(seg);
+  });
+
+  updateMetrics();renderRightPanel();updateTable();
+  document.getElementById('mSrc').textContent='IA approfondie · WMS BE';
 }
 
 function _applyAIResult(result,coordMode,zoom,W,H,hasImg){
